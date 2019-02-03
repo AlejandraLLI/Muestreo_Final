@@ -1,6 +1,6 @@
 # Muestreo_Final
 
-This repository has the code and files for the final project  **"2012 Elections in Mexico: an estimation of the total votes by candidate"** for the final exam of the Sampling Course. 
+This repository has the code and files for the final project  **"2012 Elections in Mexico: an estimation of the total votes by candidate"** for the final exam of the Sampling Course (Spring 2018). 
 
 The objective is to estimate the total votes by candidate for the July 2012 elections in Mexico using samples of nominal sections of different sizes using simple sampling and sampling with proportional probabilities. 
 
