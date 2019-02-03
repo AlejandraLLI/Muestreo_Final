@@ -1,0 +1,678 @@
+% !Rnw weave = knitr
+\documentclass[11pt,a4paper]{article}
+% \documentclass[12pt,a4paper,titlepage]{article}
+
+\usepackage[latin1]{inputenc} %Para manejo de acentos y caracteres.
+\usepackage[spanish,mexico]{babel} % Para escribir en español
+\usepackage{babelbib} %para la bibliografía
+\usepackage[round]{natbib} %para las citas
+\providecommand{\BIBand}{y} %cambia and por el valor dentro de llaves
+\usepackage{amsmath} % Para símbolos matemáticos
+\usepackage{amsfonts} % Para símbolos matemáticos
+\usepackage{amssymb} % Para símbolos matemáticos
+\usepackage[T1]{fontenc}
+\usepackage{color} %para tener más colores. 
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor} % para  tener más colores
+\usepackage{rotating} %para girar encabezados de tablas.
+\usepackage{booktabs} %para la impresión de tablas. 
+\usepackage{array} %para impresión de tablas.
+\usepackage{multirow} %para agregar multiples filas a las tablas.
+\usepackage{arydshln} % para lineas en tablas
+\usepackage{geometry} 
+\usepackage{graphicx} %para las gráficas
+\graphicspath{{figure/}} % para tomar las imagenes directo del folder en que las guarda kniter.
+\usepackage{subfigure}%para, agregar subgráficas en cada plot.
+\usepackage{longtable} %para imprimir tablas que ocupan más de una hoja. 
+\usepackage{float}
+\usepackage{etex}
+\usepackage[font=small,skip=5pt]{caption}
+\usepackage{pdflscape} %para hojas horizontales
+\usepackage{mathptmx}
+\reserveinserts{18}
+\usepackage{morefloats}
+\geometry{verbose,tmargin=2cm,bmargin=2cm,lmargin=2cm,rmargin=2cm} % para los márgenes de la hoja.
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+\setlength{\parskip}{\medskipamount}
+\setlength{\parindent}{0pt}
+\usepackage[pdftex,
+pdfauthor={Alejandra Lelo de Larrea Ibarra},
+pdftitle={Intervenciones Cambiarias},
+pdfsubject={Finanzas},
+pdfkeywords={Intervenciones Cambiarias},
+pdfproducer={Latex con hyperref},
+pdfcreator={pdflatex}]{hyperref}
+
+
+\newcommand{\twopartdef}[3]
+{
+\left\{
+\begin{array}{ll}
+#1 & \mbox{if } #2 \\
+#3 & \mbox{otherwise }
+\end{array}
+\right.
+}
+
+\setcounter{topnumber}{2}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{4}
+\renewcommand{\topfraction}{0.85}
+\renewcommand{\bottomfraction}{0.85}
+\renewcommand{\textfraction}{0.15}
+\renewcommand{\floatpagefraction}{0.8}
+\renewcommand{\textfraction}{0.1}
+\setlength{\floatsep}{5pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{5pt plus 2pt minus 2pt}
+\setlength{\intextsep}{5pt plus 2pt minus 2pt}
+
+
+\title{\vspace{-2cm}Proyecto Final: Ejercicio 2}
+
+\author{Alejandra Lelo de Larrea 124433, Diego A. Estrada 165352, Victor Quintero 175897}
+
+\date{}
+
+\begin{document}
+
+
+\maketitle
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Notas: 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+<<setup, echo=FALSE,message=FALSE,warning=FALSE>>=
+
+# Directorio de trabajo
+setwd("E:/ITAM Maestría/Primavera 2018/Muestreo/Proyecto Final")
+
+# Cargamos librerias
+library(tidyverse) # Para manipulacion y visualizacion de datos
+
+library(DT) # Para editar tablas
+
+library(Hmisc) # Para editar digitos en tablas 
+
+library(plotly) # Para graficas interactivas
+
+library(pastecs) # Para estadísticas descriptivas
+
+library(knitr) # Para editar tablas y otros. 
+
+library(ggpubr) # para gráficas
+
+library(xtable) # para editar gráficas
+
+@
+
+<<edicionTexto,echo=FALSE, cache=TRUE,message=FALSE,warning=FALSE>>=
+
+# Footnote graficas
+# Nota: el valor de y modifica la posición en eje vertical. Va aumentando conforme se quiera tener más arriba el footnote de la grafica. 
+makeFootnote1 <- function(footnoteText,
+                          size=0.6, color='black',xpos=325,ypos=0)
+{
+  require(grid)
+  pushViewport(viewport())
+  grid.text(label= footnoteText ,
+            x=unit(xpos,"mm")-unit(1,"npc"),
+            y= unit(ypos, "mm"),
+            just=c("left", "bottom"),
+            gp=gpar(cex= size, col=color),
+            check.overlap=TRUE)
+  popViewport()
+}
+
+
+# Se crea una función para que los números menores a un limite se impriman en color color1 (rojo por default) 
+# y los mayores en color2 (negro por default).
+colorTexto <- function(x,lim,color1='red',color2='black'){
+  ifelse(x<lim,
+         paste("\\color{",color1,"}{", formatC(x, dig=3, format="f"), "}"),
+         paste("\\color{",color2,"}{", formatC(x, dig=3, format="f"), "}"))
+}
+
+# Se crea una función de dos variables para que el valor de y correspondiente a valores de x menores a un limite
+# en se impriman en color color1 (rojo por default) y los valores de y correspondientes a valores mayores a un limite 
+# en x se impriman en color2 (negro por default).
+colorTexto2 <- function(x,y,lim,color1='red',color2='black'){
+  ifelse(x<lim,
+         paste("\\color{",color1,"}{", formatC(y, dig=3, format="f"), "}"),
+         paste("\\color{",color2,"}{", formatC(y, dig=3, format="f"), "}"))
+}
+
+
+
+colorCorrel<- function(x, lim){
+  ifelse(x>=lim & x<1,paste("\\color{red}{", formatC(x, dig=2, format="f"), "}"), 
+         ifelse(x>-1 & x<=-lim,paste("\\color{red}{", formatC(x, dig=2, format="f"), "}"),
+                paste("\\color{black}{", formatC(x, dig=2, format="f"), "}")))
+}
+
+
+# Se crea una función para que los números se priman con una cantidad nDigits de dígitos. 
+digitos <- function(x,nDigits=2){
+  ifelse(x<0,
+         paste("\\color{black}{", formatC(x, dig=nDigits, format="f"), "}"),
+         paste("\\color{black}{", formatC(x, dig=nDigits, format="f"), "}"))
+}
+
+
+# Se crea la función para obtener el Significance Code.
+Significancia1 <- function(x){
+  ifelse(x<0.001,
+         paste("\\color{black}{***}"),
+         ifelse(x<0.01, 
+                paste("\\color{black}{**}"),
+                ifelse(x<0.05,
+                       paste("\\color{black}{*}"),
+                       ifelse(x<0.1,
+                              paste("\\color{black}{.}"),
+                              paste("\\color{white}{***}")))))
+}
+
+# Se crea la función para obtener el Significance Code con dos variables.
+Significancia2 <- function(x,y){
+  ifelse(x<0.001,
+         paste(formatC(y, dig=3, format="f"),"\\color{black}{***}"),
+         ifelse(x<0.01,
+                paste(formatC(y, dig=3, format="f"),"\\color{black}{**}"),
+                ifelse(x<0.05,
+                       paste(formatC(y, dig=3, format="f"),"\\color{black}{*}"),
+                       ifelse(x<0.1,
+                              paste(formatC(y, dig=3, format="f"),"\\color{black}{.}"),
+                              paste(formatC(y, dig=3, format="f"),"\\color{white}{***}")))))
+}
+
+
+# Se fija el color azul banxico
+azulBanxico<-rgb(24,43,71,maxColorValue=255)
+grisGraficas<-rgb(71,71,71,maxColorValue=255)
+
+@
+
+Se estima el porcentaje de intención de voto para las elecciones del 2018 por candidato a partir de una muestra no probabilística asociada a una encuesta online. Para ello, se utiliza el método de Raking con el objetivo de calibrar los factores de expansión de tal forma que la muestra cumpla con la distribución poblacional por nivel socioeconómico (SEL), por tipo de servicio telefónico (TEL), por sexo (SEX) y por grupo de edad (AG).
+
+\section{Resultados de la calibración}
+
+<<datos, echo=FALSE, cache=TRUE>>=
+
+# Cargamos los datos 
+datos2<-read.csv("E:/ITAM Maestría/Primavera 2018/Muestreo/Proyecto Final/Online_SURVEY/ONLINE_SURVEY.csv",header=TRUE)
+
+datos<-datos2
+
+#datos
+@
+
+<<calibracion, echo=FALSE,cache=TRUE,dependson=c('datos')>>=
+
+niter<-100
+for (i in 1:niter){
+
+  
+  # ---SERVICIO DE TELEFONO---
+  # Calcularla distribucion de la variable. 
+  TEL_LAN<-sum(datos$EFN[which(datos$TEL=="LANDLINE")])/sum(datos$EFN)*100
+  TEL_MOB<-sum(datos$EFN[which(datos$TEL=="MOBILE")])/sum(datos$EFN)*100
+  TEL_BOTH<-sum(datos$EFN[which(datos$TEL=="BOTH")])/sum(datos$EFN)*100
+  TEL_NEITHER<-sum(datos$EFN[which(datos$TEL=="NEITHER")])/sum(datos$EFN)*100
+  
+  # Calculamos el factor de ajuste
+  FA_LAN<-2.5/TEL_LAN
+  FA_MOB<-53.77/TEL_MOB
+  FA_BOTH<-35.61/TEL_BOTH
+  FA_NEITHER<-8.12/TEL_NEITHER
+
+  # check2<-FA_LAN*length(which(datos$TEL=="LANDLINE"))+FA_MOB*length(which(datos$TEL=="MOBILE"))+FA_BOTH*length(which(datos$TEL=="BOTH"))+FA_NEITHER*length(which(datos$SEL=="NEITHER"))
+
+  # Calcular factores de expansi?n calibrados 
+  datos$EFC[which(datos$TEL=="LANDLINE")]<-datos$EFN[which(datos$TEL=="LANDLINE")]*FA_LAN
+  datos$EFC[which(datos$TEL=="MOBILE")]<-datos$EFN[which(datos$TEL=="MOBILE")]*FA_MOB
+  datos$EFC[which(datos$TEL=="BOTH")]<-datos$EFN[which(datos$TEL=="BOTH")]*FA_BOTH
+  datos$EFC[which(datos$TEL=="NEITHER")]<-datos$EFN[which(datos$TEL=="NEITHER")]*FA_NEITHER
+  
+  datos$EFN<-datos$EFC
+  datos$EFC<-NA
+  
+  # ---NIVEL DE INGRESO---
+  
+  # Calcularla distribucion de la variable. 
+  SEL_AB<-sum(datos$EFN[which(datos$SEL=="AB")])/sum(datos$EFN)*100
+  SEL_Cmas<-sum(datos$EFN[which(datos$SEL=="C+")])/sum(datos$EFN)*100
+  SEL_C<-sum(datos$EFN[which(datos$SEL=="C")])/sum(datos$EFN)*100
+  SEL_Cmenos<-sum(datos$EFN[which(datos$SEL=="C-")])/sum(datos$EFN)*100
+  SEL_Dmas<-sum(datos$EFN[which(datos$SEL=="D+")])/sum(datos$EFN)*100
+  SEL_D<-sum(datos$EFN[which(datos$SEL=="D")])/sum(datos$EFN)*100
+  SEL_E<-sum(datos$EFN[which(datos$SEL=="E")])/sum(datos$EFN)*100
+  
+  # Calculamos el factor de ajuste
+  FA_AB<-3.9/SEL_AB
+  FA_Cmas<-9.3/SEL_Cmas
+  FA_C<-10.7/SEL_C
+  FA_Cmenos<-12.8/SEL_Cmenos
+  FA_Dmas<-19/SEL_Dmas
+  FA_D<-31.8/SEL_D
+  FA_E<-12.5/SEL_E
+ 
+  # check<-FA_AB*length(which(datos$SEL=="AB"))+FA_Cmas*length(which(datos$SEL=="C+"))+FA_C*length(which(datos$SEL=="C"))+FA_Cmenos*length(which(datos$SEL=="C-"))+FA_Dmas*length(which(datos$SEL=="D+"))+FA_D*length(which(datos$SEL=="D"))+FA_E*length(which(datos$SEL=="E"))
+
+  # Calcular factores de expansi?n calibrados 
+  datos$EFC[which(datos$SEL=="AB")]<-datos$EFN[which(datos$SEL=="AB")]*FA_AB
+  datos$EFC[which(datos$SEL=="C+")]<-datos$EFN[which(datos$SEL=="C+")]*FA_Cmas
+  datos$EFC[which(datos$SEL=="C")]<-datos$EFN[which(datos$SEL=="C")]*FA_C
+  datos$EFC[which(datos$SEL=="C-")]<-datos$EFN[which(datos$SEL=="C-")]*FA_Cmenos
+  datos$EFC[which(datos$SEL=="D+")]<-datos$EFN[which(datos$SEL=="D+")]*FA_Dmas
+  datos$EFC[which(datos$SEL=="D")]<-datos$EFN[which(datos$SEL=="D")]*FA_D
+  datos$EFC[which(datos$SEL=="E")]<-datos$EFN[which(datos$SEL=="E")]*FA_E
+  
+  datos$EFN<-datos$EFC
+  datos$EFC<-NA
+  
+  
+  # ---GRUPO Y SEXO---
+  # Calcularla distribucion de la variable. 
+  GS_M_1824<-sum(datos$EFN[which(datos$SEX=="M"&datos$GA5=="18 TO 24")])/sum(datos$EFN)*100
+  GS_M_2534<-sum(datos$EFN[which(datos$SEX=="M"&datos$GA5=="25 TO 34")])/sum(datos$EFN)*100
+  GS_M_3544<-sum(datos$EFN[which(datos$SEX=="M"&datos$GA5=="35 TO 44")])/sum(datos$EFN)*100
+  GS_M_4559<-sum(datos$EFN[which(datos$SEX=="M"&datos$GA5=="45 TO 59")])/sum(datos$EFN)*100
+  GS_M_60<-sum(datos$EFN[which(datos$SEX=="M"&datos$GA5=="60 +")])/sum(datos$EFN)*100
+  
+  GS_F_1824<-sum(datos$EFN[which(datos$SEX=="F"&datos$GA5=="18 TO 24")])/sum(datos$EFN)*100
+  GS_F_2534<-sum(datos$EFN[which(datos$SEX=="F"&datos$GA5=="25 TO 34")])/sum(datos$EFN)*100
+  GS_F_3544<-sum(datos$EFN[which(datos$SEX=="F"&datos$GA5=="35 TO 44")])/sum(datos$EFN)*100
+  GS_F_4559<-sum(datos$EFN[which(datos$SEX=="F"&datos$GA5=="45 TO 59")])/sum(datos$EFN)*100
+  GS_F_60<-sum(datos$EFN[which(datos$SEX=="F"&datos$GA5=="60 +")])/sum(datos$EFN)*100
+  
+  # Calculamos el factor de ajuste
+  FA_M_1824<-9.21/GS_M_1824
+  FA_M_2534<-10.79/GS_M_2534
+  FA_M_3544<-9.94/GS_M_3544
+  FA_M_4559<-10.46/GS_M_4559
+  FA_M_60<-7.17/GS_M_60
+  
+  FA_F_1824<-9.45/GS_F_1824
+  FA_F_2534<-11.87/GS_F_2534
+  FA_F_3544<-11.03/GS_F_3544
+  FA_F_4559<-11.75/GS_F_4559
+  FA_F_60<-8.33/GS_F_60
+
+  # Calcular factores de expansion calibrados 
+  datos$EFC[which(datos$SEX=="M"&datos$GA5=="18 TO 24")]<-datos$EFN[which(datos$SEX=="M"&datos$GA5=="18 TO 24")]*FA_M_1824
+  datos$EFC[which(datos$SEX=="M"&datos$GA5=="25 TO 34")]<-datos$EFN[which(datos$SEX=="M"&datos$GA5=="25 TO 34")]*FA_M_2534
+  datos$EFC[which(datos$SEX=="M"&datos$GA5=="35 TO 44")]<-datos$EFN[which(datos$SEX=="M"&datos$GA5=="35 TO 44")]*FA_M_3544
+  datos$EFC[which(datos$SEX=="M"&datos$GA5=="45 TO 59")]<-datos$EFN[which(datos$SEX=="M"&datos$GA5=="45 TO 59")]*FA_M_4559
+  datos$EFC[which(datos$SEX=="M"&datos$GA5=="60 +")]<-datos$EFN[which(datos$SEX=="M"&datos$GA5=="60 +")]*FA_M_60
+  
+    datos$EFC[which(datos$SEX=="F"&datos$GA5=="18 TO 24")]<-datos$EFN[which(datos$SEX=="F"&datos$GA5=="18 TO 24")]*FA_F_1824
+  datos$EFC[which(datos$SEX=="F"&datos$GA5=="25 TO 34")]<-datos$EFN[which(datos$SEX=="F"&datos$GA5=="25 TO 34")]*FA_F_2534
+  datos$EFC[which(datos$SEX=="F"&datos$GA5=="35 TO 44")]<-datos$EFN[which(datos$SEX=="F"&datos$GA5=="35 TO 44")]*FA_F_3544
+  datos$EFC[which(datos$SEX=="F"&datos$GA5=="45 TO 59")]<-datos$EFN[which(datos$SEX=="F"&datos$GA5=="45 TO 59")]*FA_F_4559
+  datos$EFC[which(datos$SEX=="F"&datos$GA5=="60 +")]<-datos$EFN[which(datos$SEX=="F"&datos$GA5=="60 +")]*FA_F_60
+  
+  
+  datos$EFN<-datos$EFC
+  datos$EFC<-NA
+  
+}
+
+@
+
+<<Correccion_Redondeo,echo=FALSE, cache=TRUE, dependson=c('calibracion')>>=
+
+datos2$RND<-sum(datos2$EFN)/sum(datos$EFN)
+datos2$EFC<-datos2$RND*datos$EFN
+
+#datos2
+
+@
+ 
+Se realizaron \Sexpr{niter} iteraciones del siguiente proceso de calibración: se calibran los factores de expansión para que la distribución muestral del TEL sea igual a la poblacional; utilizando los factores de expansión calibrados en paso anterior, se realiza una segunda calibración para que la distribución muestral de SEL sea igual a la poblacional; finalmente, utilizando los factores de expansión calibrados para SEL, se realiza una tercera calibración para que la distribución muestral conjunta SEX-AG sea igual a la poblacional. La tabla \ref{Tabla:distribucion_variable} muestra las distribuciones objetivo, las distribuciones de los datos muestrales previas a la post-estratificación (EFN) y las distribuciones post-estratificadas (EFC). Se logró calibrar de manera exacta todas las categorías excepto las correspondientes a la variable TEL; de éstas, la mayor diferencia se obtuvo para la categoría NEITHER.\\
+
+<<Result_Calibrcion, echo=FALSE, cache=TRUE, dependson=c('Correccion_Redondeo'),results='asis'>>=
+  SEL_C_AB<-sum(datos2$EFC[which(datos2$SEL=="AB")])/sum(datos2$EFC)*100
+  SEL_C_Cmas<-sum(datos2$EFC[which(datos2$SEL=="C+")])/sum(datos2$EFC)*100
+  SEL_C_C<-sum(datos2$EFC[which(datos2$SEL=="C")])/sum(datos2$EFC)*100
+  SEL_C_Cmenos<-sum(datos2$EFC[which(datos2$SEL=="C-")])/sum(datos2$EFC)*100
+  SEL_C_Dmas<-sum(datos2$EFC[which(datos2$SEL=="D+")])/sum(datos2$EFC)*100
+  SEL_C_D<-sum(datos2$EFC[which(datos2$SEL=="D")])/sum(datos2$EFC)*100
+  SEL_C_E<-sum(datos2$EFC[which(datos2$SEL=="E")])/sum(datos2$EFC)*100
+
+  
+  TEL_C_LAN<-sum(datos2$EFC[which(datos2$TEL=="LANDLINE")])/sum(datos2$EFC)*100
+  TEL_C_MOB<-sum(datos2$EFC[which(datos2$TEL=="MOBILE")])/sum(datos2$EFC)*100
+  TEL_C_BOTH<-sum(datos2$EFC[which(datos2$TEL=="BOTH")])/sum(datos2$EFC)*100
+  TEL_C_NEITHER<-sum(datos2$EFC[which(datos2$TEL=="NEITHER")])/sum(datos2$EFC)*100
+  
+  
+  GS_C_M_1824<-sum(datos2$EFC[which(datos2$SEX=="M"&datos2$GA5=="18 TO 24")])/sum(datos2$EFC)*100
+  GS_C_M_2534<-sum(datos2$EFC[which(datos2$SEX=="M"&datos2$GA5=="25 TO 34")])/sum(datos2$EFC)*100
+  GS_C_M_3544<-sum(datos2$EFC[which(datos2$SEX=="M"&datos2$GA5=="35 TO 44")])/sum(datos2$EFC)*100
+  GS_C_M_4559<-sum(datos2$EFC[which(datos2$SEX=="M"&datos2$GA5=="45 TO 59")])/sum(datos2$EFC)*100
+  GS_C_M_60<-sum(datos2$EFC[which(datos2$SEX=="M"&datos2$GA5=="60 +")])/sum(datos2$EFC)*100
+  
+  GS_C_F_1824<-sum(datos2$EFC[which(datos2$SEX=="F"&datos2$GA5=="18 TO 24")])/sum(datos2$EFC)*100
+  GS_C_F_2534<-sum(datos2$EFC[which(datos2$SEX=="F"&datos2$GA5=="25 TO 34")])/sum(datos2$EFC)*100
+  GS_C_F_3544<-sum(datos2$EFC[which(datos2$SEX=="F"&datos2$GA5=="35 TO 44")])/sum(datos2$EFC)*100
+  GS_C_F_4559<-sum(datos2$EFC[which(datos2$SEX=="F"&datos2$GA5=="45 TO 59")])/sum(datos2$EFC)*100
+  GS_C_F_60<-sum(datos2$EFC[which(datos2$SEX=="F"&datos2$GA5=="60 +")])/sum(datos2$EFC)*100
+  
+  SEL_N_AB<-sum(datos2$EFN[which(datos2$SEL=="AB")])/sum(datos2$EFN)*100
+  SEL_N_Cmas<-sum(datos2$EFN[which(datos2$SEL=="C+")])/sum(datos2$EFN)*100
+  SEL_N_C<-sum(datos2$EFN[which(datos2$SEL=="C")])/sum(datos2$EFN)*100
+  SEL_N_Cmenos<-sum(datos2$EFN[which(datos2$SEL=="C-")])/sum(datos2$EFN)*100
+  SEL_N_Dmas<-sum(datos2$EFN[which(datos2$SEL=="D+")])/sum(datos2$EFN)*100
+  SEL_N_D<-sum(datos2$EFN[which(datos2$SEL=="D")])/sum(datos2$EFN)*100
+  SEL_N_E<-sum(datos2$EFN[which(datos2$SEL=="E")])/sum(datos2$EFN)*100
+
+  
+  TEL_N_LAN<-sum(datos2$EFN[which(datos2$TEL=="LANDLINE")])/sum(datos2$EFN)*100
+  TEL_N_MOB<-sum(datos2$EFN[which(datos2$TEL=="MOBILE")])/sum(datos2$EFN)*100
+  TEL_N_BOTH<-sum(datos2$EFN[which(datos2$TEL=="BOTH")])/sum(datos2$EFN)*100
+  TEL_N_NEITHER<-sum(datos2$EFN[which(datos2$TEL=="NEITHER")])/sum(datos2$EFN)*100
+  
+  
+  GS_N_M_1824<-sum(datos2$EFN[which(datos2$SEX=="M"&datos2$GA5=="18 TO 24")])/sum(datos2$EFN)*100
+  GS_N_M_2534<-sum(datos2$EFN[which(datos2$SEX=="M"&datos2$GA5=="25 TO 34")])/sum(datos2$EFN)*100
+  GS_N_M_3544<-sum(datos2$EFN[which(datos2$SEX=="M"&datos2$GA5=="35 TO 44")])/sum(datos2$EFN)*100
+  GS_N_M_4559<-sum(datos2$EFN[which(datos2$SEX=="M"&datos2$GA5=="45 TO 59")])/sum(datos2$EFN)*100
+  GS_N_M_60<-sum(datos2$EFN[which(datos2$SEX=="M"&datos2$GA5=="60 +")])/sum(datos2$EFN)*100
+  
+  GS_N_F_1824<-sum(datos2$EFN[which(datos2$SEX=="F"&datos2$GA5=="18 TO 24")])/sum(datos2$EFN)*100
+  GS_N_F_2534<-sum(datos2$EFN[which(datos2$SEX=="F"&datos2$GA5=="25 TO 34")])/sum(datos2$EFN)*100
+  GS_N_F_3544<-sum(datos2$EFN[which(datos2$SEX=="F"&datos2$GA5=="35 TO 44")])/sum(datos2$EFN)*100
+  GS_N_F_4559<-sum(datos2$EFN[which(datos2$SEX=="F"&datos2$GA5=="45 TO 59")])/sum(datos2$EFN)*100
+  GS_N_F_60<-sum(datos2$EFN[which(datos2$SEX=="F"&datos2$GA5=="60 +")])/sum(datos2$EFN)*100
+  
+tabla_dist<-data.frame(Variable=c(rep("SEL",7),rep("TEL",4),rep("SEX-AG",10)),
+                        Categoria=c("AB","C+","C", "C-","D+","D", "E","LANDLINE", "MOBILE", "BOTH", "NEITHER", "M 18-24", "M 25-34", "M 35-44", "M 45-59", "M 60+", "F 18-24", "F 25-34", "F 35-44", "F 45-59", "F 60+"),
+                        Objetivo=c(3.9,9.3,10.7,12.8,19,31.8,12.5,2.5,53.77,35.61,8.12,9.21,10.79,9.94,10.46,7.17,9.45,11.87,11.03,11.75,8.33),
+                        EFN= c(SEL_N_AB,SEL_N_Cmas,SEL_N_C,SEL_N_Cmenos,SEL_N_Dmas,SEL_N_D,SEL_N_E, TEL_N_LAN,TEL_N_MOB,TEL_N_BOTH, TEL_N_NEITHER, GS_N_M_1824,GS_N_M_2534,GS_N_M_3544,GS_N_M_4559,GS_N_M_60,GS_N_F_1824,GS_N_F_2534,GS_N_F_3544,GS_N_F_4559, GS_N_F_60), 
+                       EFC= c(SEL_C_AB,SEL_C_Cmas,SEL_C_C,SEL_C_Cmenos,SEL_C_Dmas,SEL_C_D,SEL_C_E, TEL_C_LAN,TEL_C_MOB,TEL_C_BOTH, TEL_C_NEITHER,  GS_C_M_1824,GS_C_M_2534,GS_C_M_3544,GS_C_M_4559,GS_C_M_60,GS_C_F_1824,GS_C_F_2534,GS_C_F_3544,GS_C_F_4559, GS_C_F_60) 
+                        )
+
+colnames(tabla_dist)[2]<-"Categoría"
+  
+#-- Editamos la tabla --
+
+#Se eliminan los repetidos en la primer columna para hacer un multirow
+tabla_dist$Variable<-as.character(tabla_dist$Variable)
+
+tamanioFilas<-rle(tabla_dist$Variable)
+
+primero<-!duplicated(tabla_dist$Variable)
+
+# tabla_dist$Variable[!primero]<-paste("\\cline{2-",ncol(tabla_dist),"}",sep="")
+tabla_dist$Variable[!primero]<-""
+tabla_dist$Variable[primero]<-paste0("\\hline\\parbox[t]{3mm}{\\multirow{", tamanioFilas$lengths, "}{*}{\\rotatebox[origin=c]{90}{\\textbf{", tamanioFilas$values, "}}}}")
+
+
+# Se da formato xtable. 
+tabla_dist<-xtable(tabla_dist,caption=paste("Comparación de la distribución muestral por variable."),label="Tabla:distribucion_variable")
+
+# Se alinean las columnas 
+align(tabla_dist)<-"ll|l|rrr"
+
+# addtorow<-list()
+# addtorow$pos<-list(0,nrow(tabla_dist),nrow(tabla_dist))
+# addtorow$command<-c(paste(" Statistic & Maturity & $\\beta_0$ & $s_{t-1}$ & $s_{t-2}$ & $s_{t-3}$ & $s_{t-4}$ & $s_{t-5}$ & Int\\_WMP & Int\\_WOMP & Int\\_D & Int\\_CH & CF\\_CAD & CF\\_LA\\\\\n",sep=""),
+#                     paste("\\hline \n\\multicolumn{",ncol(tabla_dist),"}{l}","{\\scriptsize{Significance Code:}} \\\\\n",sep=""),
+#                     paste("\n\\multicolumn{",ncol(tabla_dist),"}{l}","{\\scriptsize {0.001$->$'***', 0.01$->$'**', 0.05$->$'*', 0.1$->$'.', Not Signif$->$' '}} \\\\\n",sep=""))
+
+
+# Se imprime la tabla 
+print(tabla_dist,print.placement='H',NA.string="",latex.environments="center", caption.placement="top",include.rownames=FALSE,include.colnames=TRUE,hline.after=c(-1,0,7,11,21),size="footnotesize",scalebox=0.9,sanitize.text.function = function(x) x)
+  
+  
+@
+\smallskip 
+
+Comparando la distribución de la muestra antes y después de realizar la post-estratificación, se puede notar que la mayor redistibución de los factores de expansión en la muestra se dio dentro de la variable SEL; mientras que servicios telefónicos, grupos de edad y sexo, tuvieron menores ajustes. Dentro del nivel socioeconómico la redistribución de los factores de expansión se dio principalmente de las clases AB y C+ a las clases D+, D y E; esto se debe en parte a que, al ser una encuesta en línea, es más factible que la población con nivel socioeconómico alto tenga acceso a servicios de internet (fijo y/o móvil) que la población en los niveles socioeconómicos más bajos. Dentro de los servicios telefónicos, destaca el aumento del factor de expansión para los individuos que no cuentan con ningún tipo de servicio telefónico; esto hace sentido ya que es menos factible que este grupo poblacional conteste la encuesta. Finalmente, de manera general se puede concluir que existe una redistribución de los factores de expansión de la población masculina a la población femenina; así como de la población entre 25 y 44 años a la población mayor a 45 años, esto último debido a que es menos probable que los adultos y, sobre todo, los adultos mayores, utilicen servicios de internet.\\
+
+La tabla \ref{Tabla:statdesc_FE} muestra algunos estadísticos descriptivos de los factores de expansión originales y calibrados. Podemos observar que la calibración modificó los factores de expansión de tal manera que hay una gran diferencia entre el EFC mínimo y máximo, la media de la distribución es la misma que antes de la calibración, pero está muy alejada de la mediana y con una varianza muy alta. Esto hace pensar que existen algunas observaciones con un factor de expansión calibrado mucho más grande que el resto de las observaciones.\\
+
+<<datos_ord, echo=FALSE, cache=TRUE, dependson=c('Correccion_Redondeo')>>=
+
+datos_ord<-datos2[order(datos2$EFC, -rank(datos2$EFC), decreasing = TRUE), ]
+
+a1<-(datos_ord$EFC[1]/mean(datos_ord$EFC[1:500]))
+a2<-(datos_ord$EFC[2]/mean(datos_ord$EFC[1:500]))
+
+@
+
+<<est_desc_FE, echo=FALSE, cache=TRUE, dependson=c('datos_ord'),results='asis'>>=
+
+tabla_statdesc<-stat.desc(cbind(EFN=datos2$EFN,EFC=datos2$EFC))[c(4:5,7:9,12:13),]
+tabla_statdesc$EFN<-prettyNum(tabla_statdesc$EFN,big.mark = ",")
+tabla_statdesc$EFC<-prettyNum(tabla_statdesc$EFC,big.mark = ",")
+
+# Se da formato xtable. 
+tabla_statdesc<-xtable(tabla_statdesc,caption=paste("Estadísticas descriptivas de los factores de expansión."),label="Tabla:statdesc_FE")
+rownames(tabla_statdesc)<-c("Mínimo","Máximo","Suma","Mediana","Media","Varianza","Desviación Estándar")
+
+# Se alinean las columnas 
+align(tabla_statdesc)<-"l|rr"
+
+# addtorow<-list()
+# addtorow$pos<-list(0,nrow(tabla_statdesc),nrow(tabla_statdesc))
+# addtorow$command<-c(paste(" Statistic & Maturity & $\\beta_0$ & $s_{t-1}$ & $s_{t-2}$ & $s_{t-3}$ & $s_{t-4}$ & $s_{t-5}$ & Int\\_WMP & Int\\_WOMP & Int\\_D & Int\\_CH & CF\\_CAD & CF\\_LA\\\\\n",sep=""),
+#                     paste("\\hline \n\\multicolumn{",ncol(tabla_statdesc),"}{l}","{\\scriptsize{Significance Code:}} \\\\\n",sep=""),
+#                     paste("\n\\multicolumn{",ncol(tabla_statdesc),"}{l}","{\\scriptsize {0.001$->$'***', 0.01$->$'**', 0.05$->$'*', 0.1$->$'.', Not Signif$->$' '}} \\\\\n",sep=""))
+
+# Se imprime la tabla 
+print(tabla_statdesc,print.placement='H',NA.string="",latex.environments="center", caption.placement="top",include.rownames=TRUE,include.colnames=TRUE,hline.after=c(-1,0,nrow(tabla_statdesc)),size="footnotesize",scalebox=0.95,sanitize.text.function = function(x) x)
+  
+@
+
+En la figura \ref{fig:grafica_elefantes} se puede comprobar que los factores de expansión calibrados no descienden suavemente, pues se tiene que el factor de expansión calibrado más grande es \Sexpr{round(a1,2)} veces más grande que el promedio de los EFC's. Por su parte, el segundo factor de expansión calibrado más grande es \Sexpr{round(a2,2)} veces más grande que el promedio de los EFC's. Es importante considerar que estas dos observaciones podrían influenciar los resultados de la encuesta.\\
+
+<<grafica_elefantes, echo=FALSE, message=FALSE, warning=FALSE,cache=TRUE, dependson=c('datos_ord'),fig.pos='H',fig.cap="Factores de expansión para la muestra con post-estratificación.", fig.height=4.5, fig.width=12>>=
+
+ggplot(datos_ord[1:300,],aes(x=500:201,y=EFC)) +theme_bw() +
+  geom_bar(stat = "identity", col="Royalblue1") +
+  coord_cartesian(xlim = c(250,500))+
+  ggtitle("Factores de expansión calibrados en orden ascendente")+
+  theme(plot.title = element_text(hjust=.5,size=15),
+        axis.text.x = element_text(size=15),
+        axis.title.x = element_text(size=12),
+        axis.text.y = element_text(size=15),
+        axis.title.y = element_text(size=12),
+        plot.margin = margin(t = 0, r = 0, b = 20, l = 0, unit = "pt"))+
+  xlab("Observación")+
+  ylab("EFC")+
+  coord_flip()
+
+footnote1<-"Nota: Los primeros 200 EFC's se omiten para tener una gráfica más detallada."
+
+makeFootnote1(footnote1,xpos=320,ypos=1,size=0.8)
+  
+@
+
+\section{Resultados de la encuesta}
+
+La tabla \ref{Tabla:ranking_Candidatos} muestra el porcentaje de intención de voto por candidato para la muestra antes y después de realizar la post-estratificación, así como el lugar que ocupa cada candidato. Independientemente de si se utilizan los EFN's o EFC's, AMLO resultaría ganador de la elección con el mayor porcentaje de intención de voto. Tanto Ricardo Anaya como José Antonio Meade, caen un lugar en la tabla al utilizar post-estratificación. De los candidatos independientes, Margarita Zavala es quien pierde mayor posición pasando del cuarto al séptimo lugar; mientras que el Bronco sube una posición y Jaguar se mantiene en último lugar de la tabla.\\
+
+Es importante destacar que una vez calibrada la muestra, el porcentaje de indecisos pasó del quinto al segundo lugar en intención de voto; lo que significa que entre indecisos y votos nulos podrían darle la vuelta a los resultados electorales a pesar de la amplia diferencia que existe entre el porcentaje de intención de votos entre AMLO y RAC (primer y segundo lugar respectivamente sin considerar los votos indecisos).\\
+
+<<estimacionPuntual,echo=FALSE, cache=TRUE,dependson=c('Correccion_Redondeo'),results='asis'>>=
+
+# Tamaño de muestra
+n<-500
+N<-sum(datos2$EFN)
+
+# NO CALIBRADOS
+
+#JAMK
+prop_N_JAMK<-sum(datos2$EFN[which(datos2$VOT=="JAMK (PRI/PV/NA)")])/N*100
+
+# RAC
+prop_N_RAC<-sum(datos2$EFN[which(datos2$VOT=="RAC (PAN/PRD/MC)")])/N*100
+
+# AMLO
+prop_N_AMLO<-sum(datos2$EFN[which(datos2$VOT=="AMLO (MOR/PT)")])/N*100
+
+# BLANK
+prop_N_BLANK<-sum(datos2$EFN[which(datos2$VOT=="BLANK")])/N*100
+
+#MZG
+prop_N_MZG<-sum(datos2$EFN[which(datos2$VOT=="MZG (IND)")])/N*100
+
+#BRONCO
+prop_N_BRONCO<-sum(datos2$EFN[which(datos2$VOT=="BRONCO (IND)")])/N*100
+
+#JAGUAR
+prop_N_JAGUAR<-sum(datos2$EFN[which(datos2$VOT=="JAGUAR (IND)")])/N*100
+
+#NULL
+prop_N_NULL<-sum(datos2$EFN[which(datos2$VOT=="NULL")])/N*100
+
+
+
+# CALIBRADOS 
+#JAMK
+prop_C_JAMK<-sum(datos2$EFC[which(datos2$VOT=="JAMK (PRI/PV/NA)")])/N*100
+
+# RAC
+prop_C_RAC<-sum(datos2$EFC[which(datos2$VOT=="RAC (PAN/PRD/MC)")])/N*100
+
+# AMLO
+prop_C_AMLO<-sum(datos2$EFC[which(datos2$VOT=="AMLO (MOR/PT)")])/N*100
+
+# BLANK
+prop_C_BLANK<-sum(datos2$EFC[which(datos2$VOT=="BLANK")])/N*100
+
+#MZG
+prop_C_MZG<-sum(datos2$EFC[which(datos2$VOT=="MZG (IND)")])/N*100
+
+#BRONCO
+prop_C_BRONCO<-sum(datos2$EFC[which(datos2$VOT=="BRONCO (IND)")])/N*100
+
+#JAGUAR
+prop_C_JAGUAR<-sum(datos2$EFC[which(datos2$VOT=="JAGUAR (IND)")])/N*100
+
+#NULL
+prop_C_NULL<-sum(datos2$EFC[which(datos2$VOT=="NULL")])/N*100
+
+
+# Se crea la tabla de resultados 
+tabla<-data_frame(Candidato=c("JAMK","RAC","AMLO","MZG","BRONCO","JAGUAR","INDECISO","NULO"),
+                  Porcentaje_EFN=c(prop_N_JAMK,prop_N_RAC,prop_N_AMLO,prop_N_MZG,prop_N_BRONCO,prop_N_JAGUAR,prop_N_BLANK,prop_N_NULL),
+                  Porcentaje_EFC=c(prop_C_JAMK,prop_C_RAC,prop_C_AMLO,prop_C_MZG,prop_C_BRONCO,prop_C_JAGUAR,prop_C_BLANK,prop_C_NULL))
+
+tabla$Lugar_EFN<-rank(-tabla$Porcentaje_EFN)
+tabla$Lugar_EFC<-rank(-tabla$Porcentaje_EFC)
+
+tabla_candidatos<-tabla%>%select(Candidato, Porcentaje_EFN,Lugar_EFN,Porcentaje_EFC,Lugar_EFC)
+tabla_candidatos<-tabla_candidatos[c(3,1,2,5,6,4,7,8),]
+
+# Se da formato xtable. 
+tabla_candidatos$Porcentaje_EFN<-digitos(as.numeric(tabla_candidatos$Porcentaje_EFN),nDigits=2)
+tabla_candidatos$Porcentaje_EFC<-digitos(as.numeric(tabla_candidatos$Porcentaje_EFC),nDigits=2)
+tabla_candidatos$Lugar_EFN<-digitos(as.numeric(tabla_candidatos$Lugar_EFN),nDigits=0)
+tabla_candidatos$Lugar_EFC<-digitos(as.numeric(tabla_candidatos$Lugar_EFC),nDigits=0)
+
+tabla_candidatos<-xtable(tabla_candidatos,caption=paste("Porcentaje de intención de voto de los candidatos antes y después de post-estratificar"),label="Tabla:ranking_Candidatos")
+
+# Se alinean las columnas 
+align(tabla_candidatos)<-"ll|rc|rc"
+
+addtorow<-list()
+addtorow$pos<-list(0,0,3,6)
+addtorow$command<-c("\\multirow{2}{*}{Candidato}& \\multicolumn{2}{c|}{EFN} & \\multicolumn{2}{c}{EFN} \\\\\n",
+                    paste(" \\cline{2-",ncol(tabla_candidatos),"}\\n  & \\% Int. Votos & Lugar & \\% Int. Votos & Lugar \\\\\n",sep=""),
+                    "\\hdashline \n",
+                    "\\hdashline \n")
+
+
+# Se imprime la tabla 
+print(tabla_candidatos,print.placement='H',NA.string="",latex.environments="center", caption.placement="top",include.rownames=FALSE,include.colnames=FALSE,add.to.row=addtorow,hline.after=c(-1,0,0,nrow(tabla_candidatos)),size="footnotesize",scalebox=0.95,sanitize.text.function = function(x) x)
+ 
+@
+\bigskip
+
+
+La figura \ref{fig:Grafica_conjunta_candidatos} muestra la redistribución del porcentaje de intención de voto por candidato y por nivel socioeconómico para la muestra antes y después de la post-estratificación. Contrastando ambas gráficas, se puede notar que el porcentaje de votos de las clases socioeconómicas altas (AB, C+ y C) disminuye mientras que los de las clases socioeconómicas bajas (D+, D y E) aumentan; esto está en línea con los resultados de la sección anterior. Es importante destacar que, al utilizar factores de expansión calibrados, los votos indecisos corresponden en su mayoría a la clase E y que los votos nulos corresponden en su mayoría a la clase D+. Además, es evidente que la simpatía por AMLO es más homogénea entre todas las clases socioeconómicas; mientras que los demás candidatos son apoyados en su mayoría por un grupo socioeconómico específico. \\
+
+<<Grafica_conjunta_candidatos,echo=FALSE, cache=TRUE, dependson=c('datos_ord','estimacionPuntual'),fig.pos='H',fig.cap='Porcentaje de intención de voto por candidato y por nivel socio económico antes y después de post-estratificar.', fig.height=9, fig.width=12>>=
+
+# Despues de post-estratficar
+datos_nueva<-aggregate(datos_ord[,7], list(datos_ord$VOT,datos_ord$SEL), sum)
+datos_nueva$Group.1<-as.character(datos_nueva$Group.1)
+datos_nueva$Group.2<-as.character(datos_nueva$Group.2)
+
+datos_nueva$Group.1[which(datos_nueva$Group.1=='AMLO (MOR/PT)')]<-"AMLO"
+datos_nueva$Group.1[which(datos_nueva$Group.1=='BLANK')]<-"INDECISO"
+datos_nueva$Group.1[which(datos_nueva$Group.1=='BRONCO (IND)')]<-"BRONCO"
+datos_nueva$Group.1[which(datos_nueva$Group.1=='JAGUAR (IND)')]<-"JAGUAR"
+datos_nueva$Group.1[which(datos_nueva$Group.1=='JAMK (PRI/PV/NA)')]<-"JAMK"
+datos_nueva$Group.1[which(datos_nueva$Group.1=='RAC (PAN/PRD/MC)')]<-"RAC"
+datos_nueva$Group.1[which(datos_nueva$Group.1=='NULL')]<-"NULO"
+datos_nueva$Group.1[which(datos_nueva$Group.1=='MZG (IND)')]<-"MZG"
+
+datos_nueva$Group.1<-factor(datos_nueva$Group.1,levels=c('AMLO','JAMK','RAC','BRONCO','JAGUAR','MZG','INDECISO','NULO'))
+datos_nueva$Group.2<-factor(datos_nueva$Group.2,levels=c('AB','C+','C','C-','D+','D','E'))
+
+#dfp1 <- melt(tabla2)
+q1<-ggplot(datos_nueva, aes(x = Group.1, y= x/sum(x)*100)) +theme_bw() +
+geom_bar(stat="identity", aes(fill = Group.2), width=.5)+
+  coord_cartesian(ylim = c(0, 41)) +
+  ylab("")+
+  xlab("")+
+  guides(fill=FALSE)+
+  ggtitle("b) Resultados con factores de expansión calibrados finales")+
+  theme(plot.title = element_text(hjust=.5, size = 15),
+        axis.text.x = element_text(angle = 90, hjust = .5,size=15),
+        axis.title.y=element_text(size=12.5),
+        axis.text.y=element_text(size=15))+
+  annotate("text", x = 1:8, y = c(prop_C_AMLO,prop_C_JAMK,prop_C_RAC,prop_C_BRONCO,prop_C_JAGUAR,prop_C_MZG,prop_C_BLANK,prop_C_NULL)+1, label =paste(round(c(prop_C_AMLO,prop_C_JAMK,prop_C_RAC,prop_C_BRONCO,prop_C_JAGUAR,prop_C_MZG,prop_C_BLANK,prop_C_NULL),2),"%",sep=""),size=5)
+
+# Antes de post-estratficar
+datos_nueva2<-aggregate(datos_ord[,5], list(datos_ord$VOT,datos_ord$SEL), sum)
+
+datos_nueva2$Group.1<-as.character(datos_nueva2$Group.1)
+datos_nueva2$Group.2<-as.character(datos_nueva2$Group.2)
+
+datos_nueva2$Group.1[which(datos_nueva2$Group.1=='AMLO (MOR/PT)')]<-"AMLO"
+datos_nueva2$Group.1[which(datos_nueva2$Group.1=='BLANK')]<-"INDECISO"
+datos_nueva2$Group.1[which(datos_nueva2$Group.1=='BRONCO (IND)')]<-"BRONCO"
+datos_nueva2$Group.1[which(datos_nueva2$Group.1=='JAGUAR (IND)')]<-"JAGUAR"
+datos_nueva2$Group.1[which(datos_nueva2$Group.1=='JAMK (PRI/PV/NA)')]<-"JAMK"
+datos_nueva2$Group.1[which(datos_nueva2$Group.1=='RAC (PAN/PRD/MC)')]<-"RAC"
+datos_nueva2$Group.1[which(datos_nueva2$Group.1=='NULL')]<-"NULO"
+datos_nueva2$Group.1[which(datos_nueva2$Group.1=='MZG (IND)')]<-"MZG"
+
+datos_nueva2$Group.1<-factor(datos_nueva2$Group.1,levels=c('AMLO','JAMK','RAC','BRONCO','JAGUAR','MZG','INDECISO','NULO'))
+datos_nueva2$Group.2<-factor(datos_nueva2$Group.2,levels=c('AB','C+','C','C-','D+','D','E'))
+
+q2<-ggplot(datos_nueva2, aes(x = Group.1, y= x/sum(x)*100)) +theme_bw() +
+geom_bar(stat="identity", aes(fill = Group.2), width=.5)+
+  coord_cartesian(ylim = c(0, 41)) +
+  ylab("Porcentaje de intención voto")+
+  xlab("")+
+  guides(fill=guide_legend(title="SEL"))+
+  ggtitle("Resultados con factores de expansión no calibrados")+
+   theme(plot.title = element_text(hjust=.5, size = 15),
+        axis.text.x = element_text(angle = 90, hjust = .5,size=15),
+        axis.title.y=element_text(size=12.5),
+        axis.text.y=element_text(size=15))+
+  annotate("text", x = 1:8, y = c(prop_N_AMLO,prop_N_JAMK,prop_N_RAC,prop_N_BRONCO,prop_N_JAGUAR,prop_N_MZG,prop_N_BLANK,prop_N_NULL)+1, label =paste(round(c(prop_N_AMLO,prop_N_JAMK,prop_N_RAC,prop_N_BRONCO,prop_N_JAGUAR,prop_N_MZG,prop_N_BLANK,prop_N_NULL),2),"%",sep=""),size=5)
+
+  
+
+# Se imprimen las gráficas de forma conjunta con leyenda compartida. 
+ggarrange(q2,q1,nrow=1,ncol=2, common.legend = TRUE, legend = "right") +
+  guides(colour=guide_legend(nrow=1))
+
+@
+
+
+Finalmente sería interesante ver como cambian los resultados si se utiliza un podado de pesos para las dos observaciones que resultaron con un EFC muy grande; así como si se incluyeran otras variables al estudio como el grado de escolaridad o la region/estado/ciudad en que vive el encuestado con el fin de dar una mejor estimación del porcentaje de intención de voto.
+
+\end{document}

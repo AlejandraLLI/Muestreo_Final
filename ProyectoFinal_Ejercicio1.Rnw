@@ -1,0 +1,2024 @@
+% !Rnw weave = knitr
+\documentclass[11pt,a4paper]{article}
+% \documentclass[12pt,a4paper,titlepage]{article}
+
+\usepackage[latin1]{inputenc} %Para manejo de acentos y caracteres.
+\usepackage[spanish,mexico]{babel} % Para escribir en español
+\usepackage{babelbib} %para la bibliografía
+\usepackage[round]{natbib} %para las citas
+\providecommand{\BIBand}{y} %cambia and por el valor dentro de llaves
+\usepackage{amsmath} % Para símbolos matemáticos
+\usepackage{amsfonts} % Para símbolos matemáticos
+\usepackage{amssymb} % Para símbolos matemáticos
+\usepackage[T1]{fontenc}
+\usepackage{color} %para tener más colores. 
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor} % para  tener más colores
+\usepackage{rotating} %para girar encabezados de tablas.
+\usepackage{booktabs} %para la impresión de tablas. 
+\usepackage{array} %para impresión de tablas.
+\usepackage{multirow} %para agregar multiples filas a las tablas.
+\usepackage{arydshln} % para lineas en tablas
+\usepackage{geometry} 
+\usepackage{graphicx} %para las gráficas
+\graphicspath{{figure/}} % para tomar las imagenes directo del folder en que las guarda kniter.
+\usepackage{subfigure}%para, agregar subgráficas en cada plot.
+\usepackage{longtable} %para imprimir tablas que ocupan más de una hoja. 
+\usepackage{float}
+\usepackage{etex}
+\usepackage[font=small,skip=5pt]{caption}
+\usepackage{pdflscape} %para hojas horizontales
+\usepackage{mathptmx}
+\reserveinserts{18}
+\usepackage{morefloats}
+\geometry{verbose,tmargin=2cm,bmargin=2cm,lmargin=2cm,rmargin=2cm} % para los márgenes de la hoja.
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+\setlength{\parskip}{\medskipamount}
+\setlength{\parindent}{0pt}
+\usepackage[pdftex,
+pdfauthor={Alejandra Lelo de Larrea Ibarra},
+pdftitle={Intervenciones Cambiarias},
+pdfsubject={Finanzas},
+pdfkeywords={Intervenciones Cambiarias},
+pdfproducer={Latex con hyperref},
+pdfcreator={pdflatex}]{hyperref}
+
+
+\newcommand{\twopartdef}[3]
+{
+\left\{
+\begin{array}{ll}
+#1 & \mbox{if } #2 \\
+#3 & \mbox{otherwise }
+\end{array}
+\right.
+}
+
+\setcounter{topnumber}{2}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{4}
+\renewcommand{\topfraction}{0.85}
+\renewcommand{\bottomfraction}{0.85}
+\renewcommand{\textfraction}{0.15}
+\renewcommand{\floatpagefraction}{0.8}
+\renewcommand{\textfraction}{0.1}
+\setlength{\floatsep}{5pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{5pt plus 2pt minus 2pt}
+\setlength{\intextsep}{5pt plus 2pt minus 2pt}
+
+
+\title{\vspace{-2cm}Proyecto Final: Ejercicio 1}
+
+\author{Alejandra Lelo de Larrea 124433, Diego A. Estrada 165352, Victor Quintero 175897}
+
+\date{}
+
+\begin{document}
+
+
+\maketitle
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Notas: 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+<<setup, echo=FALSE,message=FALSE,warning=FALSE>>=
+
+# Directorio de trabajo
+setwd("E:/ITAM Maestría/Primavera 2018/Muestreo/Proyecto Final")
+
+# Cargamos librerias
+library(tidyverse) # Para manipulacion y visualizacion de datos
+
+library(DT) # Para editar tablas
+
+library(Hmisc) # Para editar digitos en tablas 
+
+library(plotly) # Para graficas interactivas
+
+library(pastecs) # Para estadísticas descriptivas
+
+library(knitr) # Para editar tablas y otros. 
+
+library(ggpubr) # para gráficas
+
+library(xtable) # para editar gráficas
+
+library(sampling) # Para muestreo
+
+library(samplingVarEst) # Para muestreo 
+
+library(formattable)
+
+# library(reshape)
+# library(grid)
+# library(gridExtra)
+# library(forcats)
+
+@
+
+<<edicionTexto,echo=FALSE, cache=TRUE,message=FALSE,warning=FALSE>>=
+
+# Footnote graficas
+# Nota: el valor de y modifica la posición en eje vertical. Va aumentando conforme se quiera tener más arriba el footnote de la grafica. 
+makeFootnote1 <- function(footnoteText,
+                          size=0.6, color='black',xpos=325,ypos=0)
+{
+  require(grid)
+  pushViewport(viewport())
+  grid.text(label= footnoteText ,
+            x=unit(xpos,"mm")-unit(1,"npc"),
+            y= unit(ypos, "mm"),
+            just=c("left", "bottom"),
+            gp=gpar(cex= size, col=color),
+            check.overlap=TRUE)
+  popViewport()
+}
+
+
+# Se crea una función para que los números menores a un limite se impriman en color color1 (rojo por default) 
+# y los mayores en color2 (negro por default).
+colorTexto <- function(x,lim,color1='red',color2='black'){
+  ifelse(x<lim,
+         paste("\\color{",color1,"}{", formatC(x, dig=3, format="f"), "}"),
+         paste("\\color{",color2,"}{", formatC(x, dig=3, format="f"), "}"))
+}
+
+# Se crea una función de dos variables para que el valor de y correspondiente a valores de x menores a un limite
+# en se impriman en color color1 (rojo por default) y los valores de y correspondientes a valores mayores a un limite 
+# en x se impriman en color2 (negro por default).
+colorTexto2 <- function(x,y,lim,color1='red',color2='black'){
+  ifelse(x<lim,
+         paste("\\color{",color1,"}{", formatC(y, dig=3, format="f"), "}"),
+         paste("\\color{",color2,"}{", formatC(y, dig=3, format="f"), "}"))
+}
+
+
+
+colorCorrel<- function(x, lim){
+  ifelse(x>=lim & x<1,paste("\\color{red}{", formatC(x, dig=2, format="f"), "}"), 
+         ifelse(x>-1 & x<=-lim,paste("\\color{red}{", formatC(x, dig=2, format="f"), "}"),
+                paste("\\color{black}{", formatC(x, dig=2, format="f"), "}")))
+}
+
+
+# Se crea una función para que los números se priman con una cantidad nDigits de dígitos. 
+digitos <- function(x,nDigits=2){
+  ifelse(x<0,
+         paste("\\color{black}{", formatC(x, dig=nDigits, format="f"), "}"),
+         paste("\\color{black}{", formatC(x, dig=nDigits, format="f"), "}"))
+}
+
+
+# Se crea la función para obtener el Significance Code.
+Significancia1 <- function(x){
+  ifelse(x<0.001,
+         paste("\\color{black}{***}"),
+         ifelse(x<0.01, 
+                paste("\\color{black}{**}"),
+                ifelse(x<0.05,
+                       paste("\\color{black}{*}"),
+                       ifelse(x<0.1,
+                              paste("\\color{black}{.}"),
+                              paste("\\color{white}{***}")))))
+}
+
+# Se crea la función para obtener el Significance Code con dos variables.
+Significancia2 <- function(x,y){
+  ifelse(x<0.001,
+         paste(formatC(y, dig=3, format="f"),"\\color{black}{***}"),
+         ifelse(x<0.01,
+                paste(formatC(y, dig=3, format="f"),"\\color{black}{**}"),
+                ifelse(x<0.05,
+                       paste(formatC(y, dig=3, format="f"),"\\color{black}{*}"),
+                       ifelse(x<0.1,
+                              paste(formatC(y, dig=3, format="f"),"\\color{black}{.}"),
+                              paste(formatC(y, dig=3, format="f"),"\\color{white}{***}")))))
+}
+
+
+# Se fija el color azul banxico
+azulBanxico<-rgb(24,43,71,maxColorValue=255)
+grisGraficas<-rgb(71,71,71,maxColorValue=255)
+
+@
+
+Se estima el total de votos para las elecciones de julio 2012 en México por candidato a partir de muestras de distintos tamaños de secciones nominales. Para ello, se utiliza Muestreo Aleatorio Simple (SI) y Muestreo con Probabilidades Proporcionales (PP) al listado nominal con el fin de comparar los estimadores para ambos métodos y los distintos tamaños de muestra. Como se están estimando totales, se decidió utilizar el estimador de Narain-Horvitz-Thompson (NTH) en ambos diseños de muestreo. Además, se utilizó el método de máxima entropía para la selección de muestras en PP. En cuanto a la estimación de las varianzas, para muestreo SI se utiliza la estimación de NHT y para muestreo PP el estimador de Sen-Yates-Grundy (SGY). Para efectos de comparabilidad, y para no correr el riesgo de obtener valores negativos, al calcular el DEFF en PP se reestimó la varianza del muestreo SI con el estimador SGY. Cabe mencionar que se tienen 27 secciones nominales para las cuales no se tienen datos debido a que se están trabajando con datos históricos y en las elecciones del 2012 dichas secciones nominales no existían; por ello, se decidió eliminar estas observaciones de la muestra.
+
+\section{Comparación de métodos y tamaños de muestra}
+
+<<datos, echo=FALSE, cache=TRUE>>=
+
+#Cargamos los datos
+Marco  <- read.csv("E:/ITAM Maestría/Primavera 2018/Muestreo/Proyecto Final/007_ResElect_NACIONAL_seccs_PRES2012/007_ResElect_NACIONAL_seccs_PRES2012.csv",header=TRUE)
+
+#Tenemos 37 observaciones donde el total de votos en la seccion es un nulo para todos los posibles partidos,
+# which(is.na(Marco$TOTAL))
+
+#Removemos estas observaciones y manejamos nuestro análisis con las 66,526 - 37 = 66,489 observaciones restantes
+Marco <- Marco[complete.cases(Marco), ]
+
+# Definimos los 5 diferentes tamaños de muestra
+
+n6500 <- 6500
+n500 <- 500
+n250 <- 250
+n100 <- 100
+n50 <- 50
+
+# Extraemos el tamño de la población
+N <- nrow(Marco)
+
+
+#Formamos 6 nuevas columnas que representen el total de votos para cada candidato por sección, hacemos esto sumando los votos de los partidos y coaliciones con candiato en común.
+
+Marco$EPN = Marco$PRI + Marco$PVEM + Marco$COALICIÓN.PRI.PVEM
+Marco$AMLO = Marco$PRD + Marco$PT + Marco$MOVIMIENTO.CIUDADANO + Marco$COALICIÓN.PRD.PT.MC + Marco$COALICIÓN.PRD.PT + Marco$COALICIÓN.PRD.MC + Marco$COALICIÓN.PT.MC
+Marco$JVM = Marco$PAN
+Marco$GQT = Marco$NUEVA.ALIANZA
+Marco$NoReg = Marco$NO.REGISTRADOS
+Marco$Nulos = Marco$NULOS
+
+#Nos deshacemos de las columnas que no necesitaremos
+
+Marco$NUM.FILA <- NULL
+Marco$DISTRITO <- NULL
+Marco$CASILLAS <- NULL
+Marco$TOTAL <- NULL
+Marco$PRI <- NULL 
+Marco$PVEM <- NULL  
+Marco$COALICIÓN.PRI.PVEM <- NULL
+Marco$PRD <- NULL 
+Marco$PT <- NULL 
+Marco$MOVIMIENTO.CIUDADANO <- NULL 
+Marco$COALICIÓN.PRD.PT.MC <- NULL 
+Marco$COALICIÓN.PRD.PT <- NULL 
+Marco$COALICIÓN.PRD.MC <- NULL 
+Marco$COALICIÓN.PT.MC <- NULL
+Marco$PAN <- NULL
+Marco$NUEVA.ALIANZA <- NULL
+Marco$NO.REGISTRADOS <- NULL
+Marco$NULOS <- NULL
+
+@
+
+<<TotalesVerdaderos, echo=FALSE, cache=TRUE, dependson=c('datos')>>=
+
+#Total verdadero para EPN
+total_EPN <- sum(Marco$EPN)
+Total_EPN <- c(total_EPN, total_EPN, total_EPN, total_EPN, total_EPN)
+
+#Total verdadero para AMLO
+total_AMLO <- sum(Marco$AMLO)
+Total_AMLO <- c(total_AMLO, total_AMLO, total_AMLO, total_AMLO, total_AMLO)
+
+#Total verdadero para JVM
+total_JVM <- sum(Marco$JVM)
+Total_JVM <- c(total_JVM, total_JVM, total_JVM, total_JVM, total_JVM)
+
+#Total verdadero para GQT
+total_GQT <- sum(Marco$GQT)
+Total_GQT <- c(total_GQT, total_GQT, total_GQT, total_GQT, total_GQT)
+
+#Total verdadero para No Registrados
+total_NoReg <- sum(Marco$NoReg)
+Total_NoReg <- c(total_NoReg, total_NoReg, total_NoReg, total_NoReg, total_NoReg)
+
+#Total verdadero para Nulos
+
+total_Nulos <- sum(Marco$Nulos)
+Total_Nulos <- c(total_Nulos, total_Nulos, total_Nulos, total_Nulos, total_Nulos)
+
+#Funcion comma(), para que al imprimir data frame con esta columna, los valores tengan comas
+Total_EPN <- comma(Total_EPN,digits=4)
+Total_AMLO <- comma(Total_AMLO,digits=4)
+Total_JVM <- comma(Total_JVM,digits=4)
+Total_GQT <- comma(Total_GQT,digits=4)
+Total_NoReg <- comma(Total_NoReg,digits=4)
+Total_Nulos <- comma(Total_Nulos,digits=4)
+
+@
+
+
+% ------ MUESTREO ALEATORIO SIMPLE -------
+
+<<ExraccionMuestras_SI, echo=FALSE, cache=TRUE, dependson=c('datos')>>=
+
+#Extraemos las muestras usando muestreo aleatorio simple sin reemplazo.
+set.seed(5)
+s_SI_50 <- srswor1(n50,N)
+
+set.seed(4)
+s_SI_100 <- srswor1(n100,N)
+
+set.seed(3)
+s_SI_250 <- srswor1(n250,N)
+
+set.seed(2)
+s_SI_500 <- srswor1(n500,N)
+
+set.seed(1)
+s_SI_6500 <- srswor1(n6500,N)
+
+
+#Extraemos la variable de interés Y para cada muestra - candidato
+Y_s_SI_50_EPN <- Marco$EPN[s_SI_50==1]
+Y_s_SI_100_EPN <- Marco$EPN[s_SI_100==1]
+Y_s_SI_250_EPN <- Marco$EPN[s_SI_250==1]
+Y_s_SI_500_EPN <- Marco$EPN[s_SI_500==1]
+Y_s_SI_6500_EPN <- Marco$EPN[s_SI_6500==1]
+
+Y_s_SI_50_AMLO <- Marco$AMLO[s_SI_50==1]
+Y_s_SI_100_AMLO <- Marco$AMLO[s_SI_100==1]
+Y_s_SI_250_AMLO <- Marco$AMLO[s_SI_250==1]
+Y_s_SI_500_AMLO <- Marco$AMLO[s_SI_500==1]
+Y_s_SI_6500_AMLO <- Marco$AMLO[s_SI_6500==1]
+
+Y_s_SI_50_JVM <- Marco$JVM[s_SI_50==1]
+Y_s_SI_100_JVM <- Marco$JVM[s_SI_100==1]
+Y_s_SI_250_JVM <- Marco$JVM[s_SI_250==1]
+Y_s_SI_500_JVM <- Marco$JVM[s_SI_500==1]
+Y_s_SI_6500_JVM <- Marco$JVM[s_SI_6500==1]
+
+Y_s_SI_50_GQT <- Marco$GQT[s_SI_50==1]
+Y_s_SI_100_GQT <- Marco$GQT[s_SI_100==1]
+Y_s_SI_250_GQT <- Marco$GQT[s_SI_250==1]
+Y_s_SI_500_GQT <- Marco$GQT[s_SI_500==1]
+Y_s_SI_6500_GQT <- Marco$GQT[s_SI_6500==1]
+
+Y_s_SI_50_NoReg <- Marco$NoReg[s_SI_50==1]
+Y_s_SI_100_NoReg <- Marco$NoReg[s_SI_100==1]
+Y_s_SI_250_NoReg <- Marco$NoReg[s_SI_250==1]
+Y_s_SI_500_NoReg <- Marco$NoReg[s_SI_500==1]
+Y_s_SI_6500_NoReg <- Marco$NoReg[s_SI_6500==1]
+
+Y_s_SI_50_Nulos <- Marco$Nulos[s_SI_50==1]
+Y_s_SI_100_Nulos <- Marco$Nulos[s_SI_100==1]
+Y_s_SI_250_Nulos <- Marco$Nulos[s_SI_250==1]
+Y_s_SI_500_Nulos <- Marco$Nulos[s_SI_500==1]
+Y_s_SI_6500_Nulos <- Marco$Nulos[s_SI_6500==1]
+@
+
+<<Pik_SI, echo=FALSE, cache=TRUE, dependson=c('ExraccionMuestras')>>=
+
+#Calculamos las PIk's para cada tamaño de muestra, que será la misma para cada elemento debido a que se trata de SI
+Pks_50 <- rep(n50/N, times=n50)
+Pks_100 <- rep(n100/N, times=n100)
+Pks_250 <- rep(n250/N, times=n250)
+Pks_500 <- rep(n500/N, times=n500)
+Pks_6500 <- rep(n6500/N, times=n6500)
+
+@
+
+<<EstimacionPuntual_SI,echo=FALSE, cache=TRUE, dependson=c('Pik_SI')>>=
+
+#Estimamos puntualmente el **total de votos** para cada candidato con cada muestra obtenida utilizando el estimador Narain-Horvitz-Thompson
+EstTheta_50_EPN <- Est.Total.NHT(Y_s_SI_50_EPN, Pks_50)
+EstTheta_50_AMLO <- Est.Total.NHT(Y_s_SI_50_AMLO, Pks_50)
+EstTheta_50_JVM <- Est.Total.NHT(Y_s_SI_50_JVM, Pks_50)
+EstTheta_50_GQT <- Est.Total.NHT(Y_s_SI_50_GQT, Pks_50)
+EstTheta_50_NoReg <- Est.Total.NHT(Y_s_SI_50_NoReg, Pks_50)
+EstTheta_50_Nulos <- Est.Total.NHT(Y_s_SI_50_Nulos, Pks_50)
+
+EstTheta_100_EPN <- Est.Total.NHT(Y_s_SI_100_EPN, Pks_100)
+EstTheta_100_AMLO <- Est.Total.NHT(Y_s_SI_100_AMLO, Pks_100)
+EstTheta_100_JVM <- Est.Total.NHT(Y_s_SI_100_JVM, Pks_100)
+EstTheta_100_GQT <- Est.Total.NHT(Y_s_SI_100_GQT, Pks_100)
+EstTheta_100_NoReg <- Est.Total.NHT(Y_s_SI_100_NoReg, Pks_100)
+EstTheta_100_Nulos <- Est.Total.NHT(Y_s_SI_100_Nulos, Pks_100)
+
+EstTheta_250_EPN <- Est.Total.NHT(Y_s_SI_250_EPN, Pks_250)
+EstTheta_250_AMLO <- Est.Total.NHT(Y_s_SI_250_AMLO, Pks_250)
+EstTheta_250_JVM <- Est.Total.NHT(Y_s_SI_250_JVM, Pks_250)
+EstTheta_250_GQT <- Est.Total.NHT(Y_s_SI_250_GQT, Pks_250)
+EstTheta_250_NoReg <- Est.Total.NHT(Y_s_SI_250_NoReg, Pks_250)
+EstTheta_250_Nulos <- Est.Total.NHT(Y_s_SI_250_Nulos, Pks_250)
+
+EstTheta_500_EPN <- Est.Total.NHT(Y_s_SI_500_EPN, Pks_500)
+EstTheta_500_AMLO <- Est.Total.NHT(Y_s_SI_500_AMLO, Pks_500)
+EstTheta_500_JVM <- Est.Total.NHT(Y_s_SI_500_JVM, Pks_500)
+EstTheta_500_GQT <- Est.Total.NHT(Y_s_SI_500_GQT, Pks_500)
+EstTheta_500_NoReg <- Est.Total.NHT(Y_s_SI_500_NoReg, Pks_500)
+EstTheta_500_Nulos <- Est.Total.NHT(Y_s_SI_500_Nulos, Pks_500)
+
+EstTheta_6500_EPN <- Est.Total.NHT(Y_s_SI_6500_EPN, Pks_6500)
+EstTheta_6500_AMLO <- Est.Total.NHT(Y_s_SI_6500_AMLO, Pks_6500)
+EstTheta_6500_JVM <- Est.Total.NHT(Y_s_SI_6500_JVM, Pks_6500)
+EstTheta_6500_GQT <- Est.Total.NHT(Y_s_SI_6500_GQT, Pks_6500)
+EstTheta_6500_NoReg <- Est.Total.NHT(Y_s_SI_6500_NoReg, Pks_6500)
+EstTheta_6500_Nulos <- Est.Total.NHT(Y_s_SI_6500_Nulos, Pks_6500)
+@
+
+<<EstimacionVarianza_SI,echo=FALSE, cache=TRUE, dependson=c('EstimacionPuntual_SI')>>=
+
+#Calculamos la matriz de probabilidades de inclusión conjuntas MatPIkl's
+MatPkl_SI_50 <- matrix(n50*(n50-1)/(N*(N-1)), ncol=n50, nrow=n50)
+diag(MatPkl_SI_50) <- n50/N
+
+MatPkl_SI_100 <- matrix(n100*(n100-1)/(N*(N-1)), ncol=n100, nrow=n100)
+diag(MatPkl_SI_100) <- n100/N
+
+MatPkl_SI_250 <- matrix(n250*(n250-1)/(N*(N-1)), ncol=n250, nrow=n250)
+diag(MatPkl_SI_250) <- n250/N
+
+MatPkl_SI_500 <- matrix(n500*(n500-1)/(N*(N-1)), ncol=n500, nrow=n500)
+diag(MatPkl_SI_500) <- n500/N
+
+MatPkl_SI_6500 <- matrix(n6500*(n6500-1)/(N*(N-1)), ncol=n6500, nrow=n6500)
+diag(MatPkl_SI_6500) <- n6500/N
+
+
+#Estimamos la varianza Horvitz-Thompson para el estimador puntual del total Narain-Horvitz-Thompson que calculamos unos pasos atrás
+EstVarEstTheta_50_EPN <- VE.HT.Total.NHT(Y_s_SI_50_EPN, Pks_50, MatPkl_SI_50)
+EstVarEstTheta_100_EPN <- VE.HT.Total.NHT(Y_s_SI_100_EPN, Pks_100, MatPkl_SI_100)
+EstVarEstTheta_250_EPN <- VE.HT.Total.NHT(Y_s_SI_250_EPN, Pks_250, MatPkl_SI_250)
+EstVarEstTheta_500_EPN <- VE.HT.Total.NHT(Y_s_SI_500_EPN, Pks_500, MatPkl_SI_500)
+EstVarEstTheta_6500_EPN <- VE.HT.Total.NHT(Y_s_SI_6500_EPN, Pks_6500, MatPkl_SI_6500)
+
+EstVarEstTheta_50_AMLO <- VE.HT.Total.NHT(Y_s_SI_50_AMLO, Pks_50, MatPkl_SI_50)
+EstVarEstTheta_100_AMLO <- VE.HT.Total.NHT(Y_s_SI_100_AMLO, Pks_100, MatPkl_SI_100)
+EstVarEstTheta_250_AMLO <- VE.HT.Total.NHT(Y_s_SI_250_AMLO, Pks_250, MatPkl_SI_250)
+EstVarEstTheta_500_AMLO <- VE.HT.Total.NHT(Y_s_SI_500_AMLO, Pks_500, MatPkl_SI_500)
+EstVarEstTheta_6500_AMLO <- VE.HT.Total.NHT(Y_s_SI_6500_AMLO, Pks_6500, MatPkl_SI_6500)
+
+EstVarEstTheta_50_JVM <- VE.HT.Total.NHT(Y_s_SI_50_JVM, Pks_50, MatPkl_SI_50)
+EstVarEstTheta_100_JVM <- VE.HT.Total.NHT(Y_s_SI_100_JVM, Pks_100, MatPkl_SI_100)
+EstVarEstTheta_250_JVM <- VE.HT.Total.NHT(Y_s_SI_250_JVM, Pks_250, MatPkl_SI_250)
+EstVarEstTheta_500_JVM <- VE.HT.Total.NHT(Y_s_SI_500_JVM, Pks_500, MatPkl_SI_500)
+EstVarEstTheta_6500_JVM <- VE.HT.Total.NHT(Y_s_SI_6500_JVM, Pks_6500, MatPkl_SI_6500)
+
+EstVarEstTheta_50_GQT <- VE.HT.Total.NHT(Y_s_SI_50_GQT, Pks_50, MatPkl_SI_50)
+EstVarEstTheta_100_GQT <- VE.HT.Total.NHT(Y_s_SI_100_GQT, Pks_100, MatPkl_SI_100)
+EstVarEstTheta_250_GQT <- VE.HT.Total.NHT(Y_s_SI_250_GQT, Pks_250, MatPkl_SI_250)
+EstVarEstTheta_500_GQT <- VE.HT.Total.NHT(Y_s_SI_500_GQT, Pks_500, MatPkl_SI_500)
+EstVarEstTheta_6500_GQT <- VE.HT.Total.NHT(Y_s_SI_6500_GQT, Pks_6500, MatPkl_SI_6500)
+
+EstVarEstTheta_50_NoReg <- VE.HT.Total.NHT(Y_s_SI_50_NoReg, Pks_50, MatPkl_SI_50)
+EstVarEstTheta_100_NoReg <- VE.HT.Total.NHT(Y_s_SI_100_NoReg, Pks_100, MatPkl_SI_100)
+EstVarEstTheta_250_NoReg <- VE.HT.Total.NHT(Y_s_SI_250_NoReg, Pks_250, MatPkl_SI_250)
+EstVarEstTheta_500_NoReg <- VE.HT.Total.NHT(Y_s_SI_500_NoReg, Pks_500, MatPkl_SI_500)
+EstVarEstTheta_6500_NoReg <- VE.HT.Total.NHT(Y_s_SI_6500_NoReg, Pks_6500, MatPkl_SI_6500)
+
+EstVarEstTheta_50_Nulos <- VE.HT.Total.NHT(Y_s_SI_50_Nulos, Pks_50, MatPkl_SI_50)
+EstVarEstTheta_100_Nulos <- VE.HT.Total.NHT(Y_s_SI_100_Nulos, Pks_100, MatPkl_SI_100)
+EstVarEstTheta_250_Nulos <- VE.HT.Total.NHT(Y_s_SI_250_Nulos, Pks_250, MatPkl_SI_250)
+EstVarEstTheta_500_Nulos <- VE.HT.Total.NHT(Y_s_SI_500_Nulos, Pks_500, MatPkl_SI_500)
+EstVarEstTheta_6500_Nulos <- VE.HT.Total.NHT(Y_s_SI_6500_Nulos, Pks_6500, MatPkl_SI_6500)
+
+#A partir de la varianza estimada, calculamos el error estandar
+StdErrEstTheta_50_EPN <- sqrt(EstVarEstTheta_50_EPN)
+StdErrEstTheta_100_EPN <- sqrt(EstVarEstTheta_100_EPN)
+StdErrEstTheta_250_EPN <- sqrt(EstVarEstTheta_250_EPN)
+StdErrEstTheta_500_EPN <- sqrt(EstVarEstTheta_500_EPN)
+StdErrEstTheta_6500_EPN <- sqrt(EstVarEstTheta_6500_EPN)
+
+StdErrEstTheta_50_AMLO <- sqrt(EstVarEstTheta_50_AMLO)
+StdErrEstTheta_100_AMLO <- sqrt(EstVarEstTheta_100_AMLO)
+StdErrEstTheta_250_AMLO <- sqrt(EstVarEstTheta_250_AMLO)
+StdErrEstTheta_500_AMLO <- sqrt(EstVarEstTheta_500_AMLO)
+StdErrEstTheta_6500_AMLO <- sqrt(EstVarEstTheta_6500_AMLO)
+
+StdErrEstTheta_50_JVM <- sqrt(EstVarEstTheta_50_JVM)
+StdErrEstTheta_100_JVM <- sqrt(EstVarEstTheta_100_JVM)
+StdErrEstTheta_250_JVM <- sqrt(EstVarEstTheta_250_JVM)
+StdErrEstTheta_500_JVM <- sqrt(EstVarEstTheta_500_JVM)
+StdErrEstTheta_6500_JVM <- sqrt(EstVarEstTheta_6500_JVM)
+
+StdErrEstTheta_50_GQT <- sqrt(EstVarEstTheta_50_GQT)
+StdErrEstTheta_100_GQT <- sqrt(EstVarEstTheta_100_GQT)
+StdErrEstTheta_250_GQT <- sqrt(EstVarEstTheta_250_GQT)
+StdErrEstTheta_500_GQT <- sqrt(EstVarEstTheta_500_GQT)
+StdErrEstTheta_6500_GQT <- sqrt(EstVarEstTheta_6500_GQT)
+
+StdErrEstTheta_50_NoReg <- sqrt(EstVarEstTheta_50_NoReg)
+StdErrEstTheta_100_NoReg <- sqrt(EstVarEstTheta_100_NoReg)
+StdErrEstTheta_250_NoReg <- sqrt(EstVarEstTheta_250_NoReg)
+StdErrEstTheta_500_NoReg <- sqrt(EstVarEstTheta_500_NoReg)
+StdErrEstTheta_6500_NoReg <- sqrt(EstVarEstTheta_6500_NoReg)
+
+StdErrEstTheta_50_Nulos <- sqrt(EstVarEstTheta_50_Nulos)
+StdErrEstTheta_100_Nulos <- sqrt(EstVarEstTheta_100_Nulos)
+StdErrEstTheta_250_Nulos <- sqrt(EstVarEstTheta_250_Nulos)
+StdErrEstTheta_500_Nulos <- sqrt(EstVarEstTheta_500_Nulos)
+StdErrEstTheta_6500_Nulos <- sqrt(EstVarEstTheta_6500_Nulos)
+@
+
+<<IC_SI,echo=FALSE, cache=TRUE, dependson=c('EstimacionVarianza_SI')>>=
+
+#Estimamos el error absoluto o precision al 95% de confianza
+alpha <- 0.05
+
+AbsErrEstTheta_50_EPN <- StdErrEstTheta_50_EPN*qnorm(1-alpha/2)
+AbsErrEstTheta_100_EPN <- StdErrEstTheta_100_EPN*qnorm(1-alpha/2)
+AbsErrEstTheta_250_EPN <- StdErrEstTheta_250_EPN*qnorm(1-alpha/2)
+AbsErrEstTheta_500_EPN <- StdErrEstTheta_500_EPN*qnorm(1-alpha/2)
+AbsErrEstTheta_6500_EPN <- StdErrEstTheta_6500_EPN*qnorm(1-alpha/2)
+
+AbsErrEstTheta_50_AMLO <- StdErrEstTheta_50_AMLO*qnorm(1-alpha/2)
+AbsErrEstTheta_100_AMLO <- StdErrEstTheta_100_AMLO*qnorm(1-alpha/2)
+AbsErrEstTheta_250_AMLO <- StdErrEstTheta_250_AMLO*qnorm(1-alpha/2)
+AbsErrEstTheta_500_AMLO <- StdErrEstTheta_500_AMLO*qnorm(1-alpha/2)
+AbsErrEstTheta_6500_AMLO <- StdErrEstTheta_6500_AMLO*qnorm(1-alpha/2)
+
+AbsErrEstTheta_50_JVM <- StdErrEstTheta_50_JVM*qnorm(1-alpha/2)
+AbsErrEstTheta_100_JVM <- StdErrEstTheta_100_JVM*qnorm(1-alpha/2)
+AbsErrEstTheta_250_JVM <- StdErrEstTheta_250_JVM*qnorm(1-alpha/2)
+AbsErrEstTheta_500_JVM <- StdErrEstTheta_500_JVM*qnorm(1-alpha/2)
+AbsErrEstTheta_6500_JVM <- StdErrEstTheta_6500_JVM*qnorm(1-alpha/2)
+
+AbsErrEstTheta_50_GQT <- StdErrEstTheta_50_GQT*qnorm(1-alpha/2)
+AbsErrEstTheta_100_GQT <- StdErrEstTheta_100_GQT*qnorm(1-alpha/2)
+AbsErrEstTheta_250_GQT <- StdErrEstTheta_250_GQT*qnorm(1-alpha/2)
+AbsErrEstTheta_500_GQT <- StdErrEstTheta_500_GQT*qnorm(1-alpha/2)
+AbsErrEstTheta_6500_GQT <- StdErrEstTheta_6500_GQT*qnorm(1-alpha/2)
+
+AbsErrEstTheta_50_NoReg <- StdErrEstTheta_50_NoReg*qnorm(1-alpha/2)
+AbsErrEstTheta_100_NoReg <- StdErrEstTheta_100_NoReg*qnorm(1-alpha/2)
+AbsErrEstTheta_250_NoReg <- StdErrEstTheta_250_NoReg*qnorm(1-alpha/2)
+AbsErrEstTheta_500_NoReg <- StdErrEstTheta_500_NoReg*qnorm(1-alpha/2)
+AbsErrEstTheta_6500_NoReg <- StdErrEstTheta_6500_NoReg*qnorm(1-alpha/2)
+
+AbsErrEstTheta_50_Nulos <- StdErrEstTheta_50_Nulos*qnorm(1-alpha/2)
+AbsErrEstTheta_100_Nulos <- StdErrEstTheta_100_Nulos*qnorm(1-alpha/2)
+AbsErrEstTheta_250_Nulos <- StdErrEstTheta_250_Nulos*qnorm(1-alpha/2)
+AbsErrEstTheta_500_Nulos <- StdErrEstTheta_500_Nulos*qnorm(1-alpha/2)
+AbsErrEstTheta_6500_Nulos <- StdErrEstTheta_6500_Nulos*qnorm(1-alpha/2)
+
+
+#Calculamos los intervalos superior e inferiOR de confianza al 95% para cada muestra de cada candidato
+LimInfICEstTheta_50_EPN  <- EstTheta_50_EPN - AbsErrEstTheta_50_EPN
+LimSupICEstTheta_50_EPN  <- EstTheta_50_EPN + AbsErrEstTheta_50_EPN
+LimInfICEstTheta_100_EPN  <- EstTheta_100_EPN - AbsErrEstTheta_100_EPN
+LimSupICEstTheta_100_EPN  <- EstTheta_100_EPN + AbsErrEstTheta_100_EPN
+LimInfICEstTheta_250_EPN  <- EstTheta_250_EPN - AbsErrEstTheta_250_EPN
+LimSupICEstTheta_250_EPN  <- EstTheta_250_EPN + AbsErrEstTheta_250_EPN
+LimInfICEstTheta_500_EPN  <- EstTheta_500_EPN - AbsErrEstTheta_500_EPN
+LimSupICEstTheta_500_EPN  <- EstTheta_500_EPN + AbsErrEstTheta_500_EPN
+LimInfICEstTheta_6500_EPN  <- EstTheta_6500_EPN - AbsErrEstTheta_6500_EPN
+LimSupICEstTheta_6500_EPN  <- EstTheta_6500_EPN + AbsErrEstTheta_6500_EPN
+
+LimInfICEstTheta_50_AMLO  <- EstTheta_50_AMLO - AbsErrEstTheta_50_AMLO
+LimSupICEstTheta_50_AMLO  <- EstTheta_50_AMLO + AbsErrEstTheta_50_AMLO
+LimInfICEstTheta_100_AMLO  <- EstTheta_100_AMLO - AbsErrEstTheta_100_AMLO
+LimSupICEstTheta_100_AMLO <- EstTheta_100_AMLO + AbsErrEstTheta_100_AMLO
+LimInfICEstTheta_250_AMLO  <- EstTheta_250_AMLO - AbsErrEstTheta_250_AMLO
+LimSupICEstTheta_250_AMLO  <- EstTheta_250_AMLO + AbsErrEstTheta_250_AMLO
+LimInfICEstTheta_500_AMLO  <- EstTheta_500_AMLO - AbsErrEstTheta_500_AMLO
+LimSupICEstTheta_500_AMLO  <- EstTheta_500_AMLO + AbsErrEstTheta_500_AMLO
+LimInfICEstTheta_6500_AMLO  <- EstTheta_6500_AMLO - AbsErrEstTheta_6500_AMLO
+LimSupICEstTheta_6500_AMLO  <- EstTheta_6500_AMLO + AbsErrEstTheta_6500_AMLO
+
+LimInfICEstTheta_50_JVM  <- EstTheta_50_JVM - AbsErrEstTheta_50_JVM
+LimSupICEstTheta_50_JVM  <- EstTheta_50_JVM + AbsErrEstTheta_50_JVM
+LimInfICEstTheta_100_JVM  <- EstTheta_100_JVM - AbsErrEstTheta_100_JVM
+LimSupICEstTheta_100_JVM  <- EstTheta_100_JVM + AbsErrEstTheta_100_JVM
+LimInfICEstTheta_250_JVM  <- EstTheta_250_JVM - AbsErrEstTheta_250_JVM
+LimSupICEstTheta_250_JVM  <- EstTheta_250_JVM + AbsErrEstTheta_250_JVM
+LimInfICEstTheta_500_JVM  <- EstTheta_500_JVM - AbsErrEstTheta_500_JVM
+LimSupICEstTheta_500_JVM  <- EstTheta_500_JVM + AbsErrEstTheta_500_JVM
+LimInfICEstTheta_6500_JVM  <- EstTheta_6500_JVM - AbsErrEstTheta_6500_JVM
+LimSupICEstTheta_6500_JVM  <- EstTheta_6500_JVM + AbsErrEstTheta_6500_JVM
+
+LimInfICEstTheta_50_GQT  <- EstTheta_50_GQT - AbsErrEstTheta_50_GQT
+LimSupICEstTheta_50_GQT  <- EstTheta_50_GQT + AbsErrEstTheta_50_GQT
+LimInfICEstTheta_100_GQT  <- EstTheta_100_GQT - AbsErrEstTheta_100_GQT
+LimSupICEstTheta_100_GQT  <- EstTheta_100_GQT + AbsErrEstTheta_100_GQT
+LimInfICEstTheta_250_GQT  <- EstTheta_250_GQT - AbsErrEstTheta_250_GQT
+LimSupICEstTheta_250_GQT  <- EstTheta_250_GQT + AbsErrEstTheta_250_GQT
+LimInfICEstTheta_500_GQT  <- EstTheta_500_GQT - AbsErrEstTheta_500_GQT
+LimSupICEstTheta_500_GQT  <- EstTheta_500_GQT + AbsErrEstTheta_500_GQT
+LimInfICEstTheta_6500_GQT  <- EstTheta_6500_GQT - AbsErrEstTheta_6500_GQT
+LimSupICEstTheta_6500_GQT  <- EstTheta_6500_GQT + AbsErrEstTheta_6500_GQT
+
+LimInfICEstTheta_50_NoReg  <- EstTheta_50_NoReg - AbsErrEstTheta_50_NoReg
+LimSupICEstTheta_50_NoReg  <- EstTheta_50_NoReg + AbsErrEstTheta_50_NoReg
+LimInfICEstTheta_100_NoReg  <- EstTheta_100_NoReg - AbsErrEstTheta_100_NoReg
+LimSupICEstTheta_100_NoReg  <- EstTheta_100_NoReg + AbsErrEstTheta_100_NoReg
+LimInfICEstTheta_250_NoReg  <- EstTheta_250_NoReg - AbsErrEstTheta_250_NoReg
+LimSupICEstTheta_250_NoReg  <- EstTheta_250_NoReg + AbsErrEstTheta_250_NoReg
+LimInfICEstTheta_500_NoReg  <- EstTheta_500_NoReg - AbsErrEstTheta_500_NoReg
+LimSupICEstTheta_500_NoReg  <- EstTheta_500_NoReg + AbsErrEstTheta_500_NoReg
+LimInfICEstTheta_6500_NoReg  <- EstTheta_6500_NoReg - AbsErrEstTheta_6500_NoReg
+LimSupICEstTheta_6500_NoReg  <- EstTheta_6500_NoReg + AbsErrEstTheta_6500_NoReg
+
+LimInfICEstTheta_50_Nulos  <- EstTheta_50_Nulos - AbsErrEstTheta_50_Nulos
+LimSupICEstTheta_50_Nulos  <- EstTheta_50_Nulos + AbsErrEstTheta_50_Nulos
+LimInfICEstTheta_100_Nulos  <- EstTheta_100_Nulos - AbsErrEstTheta_100_Nulos
+LimSupICEstTheta_100_Nulos  <- EstTheta_100_Nulos + AbsErrEstTheta_100_Nulos
+LimInfICEstTheta_250_Nulos  <- EstTheta_250_Nulos - AbsErrEstTheta_250_Nulos
+LimSupICEstTheta_250_Nulos  <- EstTheta_250_Nulos + AbsErrEstTheta_250_Nulos
+LimInfICEstTheta_500_Nulos  <- EstTheta_500_Nulos - AbsErrEstTheta_500_Nulos
+LimSupICEstTheta_500_Nulos  <- EstTheta_500_Nulos + AbsErrEstTheta_500_Nulos
+LimInfICEstTheta_6500_Nulos  <- EstTheta_6500_Nulos - AbsErrEstTheta_6500_Nulos
+LimSupICEstTheta_6500_Nulos  <- EstTheta_6500_Nulos + AbsErrEstTheta_6500_Nulos
+@
+
+<<CVE_SI,echo=FALSE, cache=TRUE, dependson=c('EstimacionVarianza_SI')>>=
+CVEEstTheta_50_EPN       <- StdErrEstTheta_50_EPN/EstTheta_50_EPN
+CVEEstTheta_100_EPN       <- StdErrEstTheta_100_EPN/EstTheta_100_EPN
+CVEEstTheta_250_EPN       <- StdErrEstTheta_250_EPN/EstTheta_250_EPN
+CVEEstTheta_500_EPN       <- StdErrEstTheta_500_EPN/EstTheta_500_EPN
+CVEEstTheta_6500_EPN       <- StdErrEstTheta_6500_EPN/EstTheta_6500_EPN
+
+CVEEstTheta_50_AMLO       <- StdErrEstTheta_50_AMLO/EstTheta_50_AMLO
+CVEEstTheta_100_AMLO       <- StdErrEstTheta_100_AMLO/EstTheta_100_AMLO
+CVEEstTheta_250_AMLO      <- StdErrEstTheta_250_AMLO/EstTheta_250_AMLO
+CVEEstTheta_500_AMLO       <- StdErrEstTheta_500_AMLO/EstTheta_500_AMLO
+CVEEstTheta_6500_AMLO      <- StdErrEstTheta_6500_AMLO/EstTheta_6500_AMLO
+
+CVEEstTheta_50_JVM       <- StdErrEstTheta_50_JVM/EstTheta_50_JVM
+CVEEstTheta_100_JVM      <- StdErrEstTheta_100_JVM/EstTheta_100_JVM
+CVEEstTheta_250_JVM       <- StdErrEstTheta_250_JVM/EstTheta_250_JVM
+CVEEstTheta_500_JVM       <- StdErrEstTheta_500_JVM/EstTheta_500_JVM
+CVEEstTheta_6500_JVM       <- StdErrEstTheta_6500_JVM/EstTheta_6500_JVM
+
+CVEEstTheta_50_GQT       <- StdErrEstTheta_50_GQT/EstTheta_50_GQT
+CVEEstTheta_100_GQT       <- StdErrEstTheta_100_GQT/EstTheta_100_GQT
+CVEEstTheta_250_GQT       <- StdErrEstTheta_250_GQT/EstTheta_250_GQT
+CVEEstTheta_500_GQT       <- StdErrEstTheta_500_GQT/EstTheta_500_GQT
+CVEEstTheta_6500_GQT       <- StdErrEstTheta_6500_GQT/EstTheta_6500_GQT
+
+CVEEstTheta_50_NoReg       <- StdErrEstTheta_50_NoReg/EstTheta_50_NoReg
+CVEEstTheta_100_NoReg       <- StdErrEstTheta_100_NoReg/EstTheta_100_NoReg
+CVEEstTheta_250_NoReg       <- StdErrEstTheta_250_NoReg/EstTheta_250_NoReg
+CVEEstTheta_500_NoReg       <- StdErrEstTheta_500_NoReg/EstTheta_500_NoReg
+CVEEstTheta_6500_NoReg       <- StdErrEstTheta_6500_NoReg/EstTheta_6500_NoReg
+
+CVEEstTheta_50_Nulos       <- StdErrEstTheta_50_Nulos/EstTheta_50_Nulos
+CVEEstTheta_100_Nulos       <- StdErrEstTheta_100_Nulos/EstTheta_100_Nulos
+CVEEstTheta_250_Nulos       <- StdErrEstTheta_250_Nulos/EstTheta_250_Nulos
+CVEEstTheta_500_Nulos       <- StdErrEstTheta_500_Nulos/EstTheta_500_Nulos
+CVEEstTheta_6500_Nulos      <- StdErrEstTheta_6500_Nulos/EstTheta_6500_Nulos
+@
+
+<<MetricasEPN_SI, echo=FALSE, cache=TRUE, dependson=c('CVE_SI')>>=
+
+#Recopilamos metricas Enrique Peña Nieto, muestreo SI
+Estimacion_EPN_SI <- c(EstTheta_50_EPN, 
+                       EstTheta_100_EPN, 
+                       EstTheta_250_EPN, 
+                       EstTheta_500_EPN, 
+                       EstTheta_6500_EPN)
+
+ErrorEstandar_EPN_SI <- c(StdErrEstTheta_50_EPN, 
+                          StdErrEstTheta_100_EPN, 
+                          StdErrEstTheta_250_EPN, 
+                          StdErrEstTheta_500_EPN, 
+                          StdErrEstTheta_6500_EPN)
+
+LimiteInferior_EPN_SI <- c(LimInfICEstTheta_50_EPN, 
+                           LimInfICEstTheta_100_EPN, 
+                           LimInfICEstTheta_250_EPN, 
+                           LimInfICEstTheta_500_EPN, 
+                           LimInfICEstTheta_6500_EPN)
+
+LimiteSuperior_EPN_SI <- c(LimSupICEstTheta_50_EPN, 
+                           LimSupICEstTheta_100_EPN, 
+                           LimSupICEstTheta_250_EPN, 
+                           LimSupICEstTheta_500_EPN, 
+                           LimSupICEstTheta_6500_EPN)
+
+AmplitudIntervalo_EPN_SI <- c(LimSupICEstTheta_50_EPN-LimInfICEstTheta_50_EPN, 
+                              LimSupICEstTheta_100_EPN-LimInfICEstTheta_100_EPN,
+                              LimSupICEstTheta_250_EPN-LimInfICEstTheta_250_EPN,
+                              LimSupICEstTheta_500_EPN-LimInfICEstTheta_500_EPN,
+                              LimSupICEstTheta_6500_EPN-LimInfICEstTheta_6500_EPN)
+
+CVE_EPN_SI <- c(CVEEstTheta_50_EPN, 
+                CVEEstTheta_100_EPN, 
+                CVEEstTheta_250_EPN, 
+                CVEEstTheta_500_EPN, 
+                CVEEstTheta_6500_EPN)
+
+Delta_EPN_SI <- c(abs(total_EPN - EstTheta_50_EPN), 
+                  abs(total_EPN - EstTheta_100_EPN),
+                  abs(total_EPN - EstTheta_250_EPN), 
+                  abs(total_EPN - EstTheta_500_EPN), 
+                  abs(total_EPN - EstTheta_6500_EPN))
+
+#Funcion comma(), para que al imprimir data frame con esta columna, los valores tengan comas
+Estimacion_EPN_SI <- comma(Estimacion_EPN_SI,digits=4)
+ErrorEstandar_EPN_SI <- comma(ErrorEstandar_EPN_SI,digits=4)
+LimiteInferior_EPN_SI <- comma(LimiteInferior_EPN_SI,digits=4)
+LimiteSuperior_EPN_SI <- comma(LimiteSuperior_EPN_SI,digits=4)
+AmplitudIntervalo_EPN_SI <- comma(AmplitudIntervalo_EPN_SI,digits=4)
+Delta_EPN_SI <- comma(Delta_EPN_SI,digits=4)
+
+@
+
+<<MetricasAMLO_SI, echo=FALSE, cache=TRUE, dependson=c('CVE_SI')>>=
+#Recopilamos metricas Andrés Manuel López Obrador, muestreo SI
+
+Estimacion_AMLO_SI <- c(EstTheta_50_AMLO, 
+                       EstTheta_100_AMLO, 
+                       EstTheta_250_AMLO, 
+                       EstTheta_500_AMLO, 
+                       EstTheta_6500_AMLO)
+
+ErrorEstandar_AMLO_SI <- c(StdErrEstTheta_50_AMLO, 
+                          StdErrEstTheta_100_AMLO, 
+                          StdErrEstTheta_250_AMLO, 
+                          StdErrEstTheta_500_AMLO, 
+                          StdErrEstTheta_6500_AMLO)
+
+LimiteInferior_AMLO_SI <- c(LimInfICEstTheta_50_AMLO, 
+                           LimInfICEstTheta_100_AMLO, 
+                           LimInfICEstTheta_250_AMLO, 
+                           LimInfICEstTheta_500_AMLO, 
+                           LimInfICEstTheta_6500_AMLO)
+
+LimiteSuperior_AMLO_SI <- c(LimSupICEstTheta_50_AMLO, 
+                           LimSupICEstTheta_100_AMLO, 
+                           LimSupICEstTheta_250_AMLO, 
+                           LimSupICEstTheta_500_AMLO, 
+                           LimSupICEstTheta_6500_AMLO)
+
+AmplitudIntervalo_AMLO_SI <- c(LimSupICEstTheta_50_AMLO-LimInfICEstTheta_50_AMLO, 
+                               LimSupICEstTheta_100_AMLO-LimInfICEstTheta_100_AMLO,
+                               LimSupICEstTheta_250_AMLO-LimInfICEstTheta_250_AMLO,
+                               LimSupICEstTheta_500_AMLO-LimInfICEstTheta_500_AMLO,
+                               LimSupICEstTheta_6500_AMLO-LimInfICEstTheta_6500_AMLO)
+
+CVE_AMLO_SI <- c(CVEEstTheta_50_AMLO, 
+                CVEEstTheta_100_AMLO, 
+                CVEEstTheta_250_AMLO, 
+                CVEEstTheta_500_AMLO, 
+                CVEEstTheta_6500_AMLO)
+
+Delta_AMLO_SI <- c(abs(total_AMLO - EstTheta_50_AMLO), 
+                  abs(total_AMLO - EstTheta_100_AMLO),
+                  abs(total_AMLO - EstTheta_250_AMLO), 
+                  abs(total_AMLO - EstTheta_500_AMLO), 
+                  abs(total_AMLO - EstTheta_6500_AMLO))
+
+#Funcion comma(), para que al imprimir data frame con esta columna, los valores tengan comas
+Estimacion_AMLO_SI <- comma(Estimacion_AMLO_SI,digits=4)
+ErrorEstandar_AMLO_SI <- comma(ErrorEstandar_AMLO_SI,digits=4)
+LimiteInferior_AMLO_SI <- comma(LimiteInferior_AMLO_SI,digits=4)
+LimiteSuperior_AMLO_SI <- comma(LimiteSuperior_AMLO_SI,digits=4)
+AmplitudIntervalo_AMLO_SI <- comma(AmplitudIntervalo_AMLO_SI,digits=4)
+Delta_AMLO_SI <- comma(Delta_AMLO_SI,digits=4)
+
+@
+
+<<MetricasJVM_SI, echo=FALSE, cache=TRUE, dependson=c('CVE_SI')>>=
+#Recopilamos metricas de Josefina Vázquez Mota, muestreo SI
+
+Estimacion_JVM_SI <- c(EstTheta_50_JVM, 
+                       EstTheta_100_JVM, 
+                       EstTheta_250_JVM, 
+                       EstTheta_500_JVM, 
+                       EstTheta_6500_JVM)
+
+ErrorEstandar_JVM_SI <- c(StdErrEstTheta_50_JVM, 
+                          StdErrEstTheta_100_JVM, 
+                          StdErrEstTheta_250_JVM, 
+                          StdErrEstTheta_500_JVM, 
+                          StdErrEstTheta_6500_JVM)
+
+LimiteInferior_JVM_SI <- c(LimInfICEstTheta_50_JVM, 
+                           LimInfICEstTheta_100_JVM, 
+                           LimInfICEstTheta_250_JVM, 
+                           LimInfICEstTheta_500_JVM, 
+                           LimInfICEstTheta_6500_JVM)
+
+LimiteSuperior_JVM_SI <- c(LimSupICEstTheta_50_JVM, 
+                           LimSupICEstTheta_100_JVM, 
+                           LimSupICEstTheta_250_JVM, 
+                           LimSupICEstTheta_500_JVM, 
+                           LimSupICEstTheta_6500_JVM)
+
+AmplitudIntervalo_JVM_SI <- c(as.integer(LimSupICEstTheta_50_JVM-LimInfICEstTheta_50_JVM), 
+                              as.integer(LimSupICEstTheta_100_JVM-LimInfICEstTheta_100_JVM),
+                              as.integer(LimSupICEstTheta_250_JVM-LimInfICEstTheta_250_JVM),
+                              as.integer(LimSupICEstTheta_500_JVM-LimInfICEstTheta_500_JVM),
+                              as.integer(LimSupICEstTheta_6500_JVM-LimInfICEstTheta_6500_JVM))
+
+CVE_JVM_SI <- c(CVEEstTheta_50_JVM, 
+                CVEEstTheta_100_JVM, 
+                CVEEstTheta_250_JVM, 
+                CVEEstTheta_500_JVM, 
+                CVEEstTheta_6500_JVM)
+
+Delta_JVM_SI <- c(abs(total_JVM - EstTheta_50_JVM), 
+                  abs(total_JVM - EstTheta_100_JVM),
+                  abs(total_JVM - EstTheta_250_JVM), 
+                  abs(total_JVM - EstTheta_500_JVM), 
+                  abs(total_JVM - EstTheta_6500_JVM))
+
+#Funcion comma(), para que al imprimir data frame con esta columna, los valores tengan comas
+Estimacion_JVM_SI <- comma(Estimacion_JVM_SI,digits=4)
+ErrorEstandar_JVM_SI <- comma(ErrorEstandar_JVM_SI,digits=4)
+LimiteInferior_JVM_SI <- comma(LimiteInferior_JVM_SI,digits=4)
+LimiteSuperior_JVM_SI <- comma(LimiteSuperior_JVM_SI,digits=4)
+AmplitudIntervalo_JVM_SI <- comma(AmplitudIntervalo_JVM_SI,digits=4)
+Delta_JVM_SI <- comma(Delta_JVM_SI,digits=4)
+
+@
+
+<<MetricasGQT_SI, echo=FALSE, cache=TRUE, dependson=c('CVE_SI')>>=
+#Recopilamos métricas para Gabriel Quadri de la Torre, muestreo SI
+
+Estimacion_GQT_SI <- c(EstTheta_50_GQT, 
+                       EstTheta_100_GQT, 
+                       EstTheta_250_GQT, 
+                       EstTheta_500_GQT, 
+                       EstTheta_6500_GQT)
+
+ErrorEstandar_GQT_SI <- c(StdErrEstTheta_50_GQT, 
+                          StdErrEstTheta_100_GQT, 
+                          StdErrEstTheta_250_GQT, 
+                          StdErrEstTheta_500_GQT, 
+                          StdErrEstTheta_6500_GQT)
+
+LimiteInferior_GQT_SI <- c(LimInfICEstTheta_50_GQT, 
+                           LimInfICEstTheta_100_GQT, 
+                           LimInfICEstTheta_250_GQT, 
+                           LimInfICEstTheta_500_GQT, 
+                           LimInfICEstTheta_6500_GQT)
+
+LimiteSuperior_GQT_SI <- c(LimSupICEstTheta_50_GQT, 
+                           LimSupICEstTheta_100_GQT, 
+                           LimSupICEstTheta_250_GQT, 
+                           LimSupICEstTheta_500_GQT, 
+                           LimSupICEstTheta_6500_GQT)
+
+AmplitudIntervalo_GQT_SI <- c(LimSupICEstTheta_50_GQT-LimInfICEstTheta_50_GQT, 
+                              LimSupICEstTheta_100_GQT-LimInfICEstTheta_100_GQT,
+                              LimSupICEstTheta_250_GQT-LimInfICEstTheta_250_GQT,
+                              LimSupICEstTheta_500_GQT-LimInfICEstTheta_500_GQT,
+                              LimSupICEstTheta_6500_GQT-LimInfICEstTheta_6500_GQT)
+
+CVE_GQT_SI <- c(CVEEstTheta_50_GQT, 
+                CVEEstTheta_100_GQT, 
+                CVEEstTheta_250_GQT, 
+                CVEEstTheta_500_GQT, 
+                CVEEstTheta_6500_GQT)
+
+Delta_GQT_SI <- c(abs(total_GQT - EstTheta_50_GQT), 
+                  abs(total_GQT - EstTheta_100_GQT),
+                  abs(total_GQT - EstTheta_250_GQT), 
+                  abs(total_GQT - EstTheta_500_GQT), 
+                  abs(total_GQT - EstTheta_6500_GQT))
+
+#Funcion comma(), para que al imprimir data frame con esta columna, los valores tengan comas
+Estimacion_GQT_SI <- comma(Estimacion_GQT_SI,digits=4)
+ErrorEstandar_GQT_SI <- comma(ErrorEstandar_GQT_SI,digits=4)
+LimiteInferior_GQT_SI <- comma(LimiteInferior_GQT_SI,digits=4)
+LimiteSuperior_GQT_SI <- comma(LimiteSuperior_GQT_SI,digits=4)
+AmplitudIntervalo_GQT_SI <- comma(AmplitudIntervalo_GQT_SI,digits=4)
+Delta_GQT_SI <- comma(Delta_GQT_SI,digits=4)
+@
+
+<<MetricasNoReg_SI,echo=FALSE, cache=TRUE, dependson=c('CVE_SI')>>=
+#Recopilamos metricas de No Registrados, muestreo SI
+
+Estimacion_NoReg_SI <- c(EstTheta_50_NoReg, 
+                         EstTheta_100_NoReg, 
+                         EstTheta_250_NoReg, 
+                         EstTheta_500_NoReg, 
+                         EstTheta_6500_NoReg)
+
+ErrorEstandar_NoReg_SI <- c(StdErrEstTheta_50_NoReg, 
+                          StdErrEstTheta_100_NoReg, 
+                          StdErrEstTheta_250_NoReg, 
+                          StdErrEstTheta_500_NoReg, 
+                          StdErrEstTheta_6500_NoReg)
+
+LimiteInferior_NoReg_SI <- c(LimInfICEstTheta_50_NoReg, 
+                           LimInfICEstTheta_100_NoReg, 
+                           LimInfICEstTheta_250_NoReg, 
+                           LimInfICEstTheta_500_NoReg, 
+                           LimInfICEstTheta_6500_NoReg)
+
+LimiteSuperior_NoReg_SI <- c(LimSupICEstTheta_50_NoReg, 
+                           LimSupICEstTheta_100_NoReg, 
+                           LimSupICEstTheta_250_NoReg, 
+                           LimSupICEstTheta_500_NoReg, 
+                           LimSupICEstTheta_6500_NoReg)
+
+AmplitudIntervalo_NoReg_SI <- c(LimSupICEstTheta_50_NoReg-LimInfICEstTheta_50_NoReg, 
+                                LimSupICEstTheta_100_NoReg-LimInfICEstTheta_100_NoReg,
+                                LimSupICEstTheta_250_NoReg-LimInfICEstTheta_250_NoReg,
+                                LimSupICEstTheta_500_NoReg-LimInfICEstTheta_500_NoReg,
+                                LimSupICEstTheta_6500_NoReg-LimInfICEstTheta_6500_NoReg)
+
+CVE_NoReg_SI <- c(CVEEstTheta_50_NoReg, 
+                  CVEEstTheta_100_NoReg, 
+                  CVEEstTheta_250_NoReg, 
+                  CVEEstTheta_500_NoReg, 
+                  CVEEstTheta_6500_NoReg)
+
+Delta_NoReg_SI <- c(abs(total_NoReg - EstTheta_50_NoReg), 
+                    abs(total_NoReg - EstTheta_100_NoReg),
+                    abs(total_NoReg - EstTheta_250_NoReg), 
+                    abs(total_NoReg - EstTheta_500_NoReg), 
+                    abs(total_NoReg - EstTheta_6500_NoReg))
+
+#Funcion comma(), para que al imprimir data frame con esta columna, los valores tengan comas
+Estimacion_NoReg_SI <- comma(Estimacion_NoReg_SI,digits=4)
+ErrorEstandar_NoReg_SI <- comma(ErrorEstandar_NoReg_SI,digits=4)
+LimiteInferior_NoReg_SI <- comma(LimiteInferior_NoReg_SI,digits=4)
+LimiteSuperior_NoReg_SI <- comma(LimiteSuperior_NoReg_SI,digits=4)
+AmplitudIntervalo_NoReg_SI <- comma(AmplitudIntervalo_NoReg_SI,digits=4)
+Delta_NoReg_SI <- comma(Delta_NoReg_SI,digits=4)
+
+@
+
+<<MetricasNulos_SI,echo=FALSE, cache=TRUE,dependson=c('CVE_SI')>>=
+#Recopilamos métricas de Nulos, muestreo SI
+
+Estimacion_Nulos_SI <- c(EstTheta_50_Nulos, 
+                         EstTheta_100_Nulos, 
+                         EstTheta_250_Nulos, 
+                         EstTheta_500_Nulos, 
+                         EstTheta_6500_Nulos)
+
+ErrorEstandar_Nulos_SI <- c(StdErrEstTheta_50_Nulos, 
+                            StdErrEstTheta_100_Nulos, 
+                            StdErrEstTheta_250_Nulos, 
+                            StdErrEstTheta_500_Nulos, 
+                            StdErrEstTheta_6500_Nulos)
+
+LimiteInferior_Nulos_SI <- c(LimInfICEstTheta_50_Nulos, 
+                             LimInfICEstTheta_100_Nulos, 
+                             LimInfICEstTheta_250_Nulos, 
+                             LimInfICEstTheta_500_Nulos, 
+                             LimInfICEstTheta_6500_Nulos)
+
+LimiteSuperior_Nulos_SI <- c(LimSupICEstTheta_50_Nulos, 
+                             LimSupICEstTheta_100_Nulos, 
+                             LimSupICEstTheta_250_Nulos, 
+                             LimSupICEstTheta_500_Nulos, 
+                             LimSupICEstTheta_6500_Nulos)
+
+AmplitudIntervalo_Nulos_SI <- c(LimSupICEstTheta_50_Nulos-LimInfICEstTheta_50_Nulos, 
+                                LimSupICEstTheta_100_Nulos-LimInfICEstTheta_100_Nulos,
+                                LimSupICEstTheta_250_Nulos-LimInfICEstTheta_250_Nulos,
+                                LimSupICEstTheta_500_Nulos-LimInfICEstTheta_500_Nulos,
+                                LimSupICEstTheta_6500_Nulos-LimInfICEstTheta_6500_Nulos)
+
+CVE_Nulos_SI <- c(CVEEstTheta_50_Nulos, 
+                  CVEEstTheta_100_Nulos, 
+                  CVEEstTheta_250_Nulos, 
+                  CVEEstTheta_500_Nulos, 
+                  CVEEstTheta_6500_Nulos)
+
+Delta_Nulos_SI <- c(abs(total_Nulos - EstTheta_50_Nulos), 
+                    abs(total_Nulos - EstTheta_100_Nulos),
+                    abs(total_Nulos - EstTheta_250_Nulos), 
+                    abs(total_Nulos - EstTheta_500_Nulos), 
+                    abs(total_Nulos - EstTheta_6500_Nulos))
+
+#Funcion comma(), para que al imprimir data frame con esta columna, los valores tengan comas
+Estimacion_Nulos_SI <- comma(Estimacion_Nulos_SI,digits=4)
+ErrorEstandar_Nulos_SI <- comma(ErrorEstandar_Nulos_SI,digits=4)
+LimiteInferior_Nulos_SI <- comma(LimiteInferior_Nulos_SI,digits=4)
+LimiteSuperior_Nulos_SI <- comma(LimiteSuperior_Nulos_SI,digits=4)
+AmplitudIntervalo_Nulos_SI <- comma(AmplitudIntervalo_Nulos_SI,digits=4)
+Delta_Nulos_SI <- comma(Delta_Nulos_SI,digits=4)
+@
+
+
+% ------ MUESTREO PROBABILIDADES PROPORCIONALES -------
+
+<<Pik_PP, echo=FALSE, cache=TRUE, dependson=c('datos')>>=
+#Obtenemos las PIk's proporcionales al listado nominal
+
+Pks_50_prop <- Pk.PropNorm.U(n50, Marco$LISTA.NOMINAL)
+Pks_100_prop <- Pk.PropNorm.U(n100, Marco$LISTA.NOMINAL)
+Pks_250_prop <- Pk.PropNorm.U(n250, Marco$LISTA.NOMINAL)
+Pks_500_prop <- Pk.PropNorm.U(n500, Marco$LISTA.NOMINAL)
+Pks_6500_prop <- Pk.PropNorm.U(n6500, Marco$LISTA.NOMINAL)
+
+@
+
+<<ExtraccionMuestras_PP, echo=FALSE, cache=TRUE, dependson=c('Pik_PP')>>=
+
+# Extraemos las muestras utilizando el muestreo de Brewer que es de alta entropia
+set.seed(5)
+s_PROP_50 <- UPbrewer(Pks_50_prop)
+
+set.seed(4)
+s_PROP_100 <- UPbrewer(Pks_100_prop)
+
+set.seed(3)
+s_PROP_250 <- UPbrewer(Pks_250_prop)
+
+set.seed(2)
+s_PROP_500 <- UPbrewer(Pks_500_prop)
+
+set.seed(1)
+s_PROP_6500 <- UPbrewer(Pks_6500_prop)
+
+#Primero creo un vector con las probabilidades de inclusion de primer orden con solo los datos muestrales
+VecPk_s_50 <- Pks_50_prop[s_PROP_50==1]
+VecPk_s_100 <- Pks_100_prop[s_PROP_100==1]
+VecPk_s_250 <- Pks_250_prop[s_PROP_250==1]
+VecPk_s_500 <- Pks_500_prop[s_PROP_500==1]
+VecPk_s_6500 <- Pks_6500_prop[s_PROP_6500==1]
+
+#Ahora creo las matrices de probas de 2do orden estimadas utilizando la version muestral del Hajek
+MatPkl_PROP_50 <- Pkl.Hajek.s(VecPk_s_50)
+MatPkl_PROP_100 <- Pkl.Hajek.s(VecPk_s_100)
+MatPkl_PROP_250 <- Pkl.Hajek.s(VecPk_s_250)
+MatPkl_PROP_500 <- Pkl.Hajek.s(VecPk_s_500)
+MatPkl_PROP_6500 <- Pkl.Hajek.s(VecPk_s_6500)
+
+#Obtengo las variable de interes Y's correspondientes a mi muestra y candidato
+Y_s_PROP_50_EPN <- Marco$EPN[s_PROP_50==1]
+Y_s_PROP_100_EPN <- Marco$EPN[s_PROP_100==1]
+Y_s_PROP_250_EPN <- Marco$EPN[s_PROP_250==1]
+Y_s_PROP_500_EPN <- Marco$EPN[s_PROP_500==1]
+Y_s_PROP_6500_EPN <- Marco$EPN[s_PROP_6500==1]
+
+Y_s_PROP_50_AMLO <- Marco$AMLO[s_PROP_50==1]
+Y_s_PROP_100_AMLO <- Marco$AMLO[s_PROP_100==1]
+Y_s_PROP_250_AMLO <- Marco$AMLO[s_PROP_250==1]
+Y_s_PROP_500_AMLO <- Marco$AMLO[s_PROP_500==1]
+Y_s_PROP_6500_AMLO <- Marco$AMLO[s_PROP_6500==1]
+
+Y_s_PROP_50_JVM <- Marco$JVM[s_PROP_50==1]
+Y_s_PROP_100_JVM <- Marco$JVM[s_PROP_100==1]
+Y_s_PROP_250_JVM <- Marco$JVM[s_PROP_250==1]
+Y_s_PROP_500_JVM <- Marco$JVM[s_PROP_500==1]
+Y_s_PROP_6500_JVM <- Marco$JVM[s_PROP_6500==1]
+
+Y_s_PROP_50_GQT <- Marco$GQT[s_PROP_50==1]
+Y_s_PROP_100_GQT <- Marco$GQT[s_PROP_100==1]
+Y_s_PROP_250_GQT <- Marco$GQT[s_PROP_250==1]
+Y_s_PROP_500_GQT <- Marco$GQT[s_PROP_500==1]
+Y_s_PROP_6500_GQT <- Marco$GQT[s_PROP_6500==1]
+
+Y_s_PROP_50_NoReg <- Marco$NoReg[s_PROP_50==1]
+Y_s_PROP_100_NoReg <- Marco$NoReg[s_PROP_100==1]
+Y_s_PROP_250_NoReg <- Marco$NoReg[s_PROP_250==1]
+Y_s_PROP_500_NoReg <- Marco$NoReg[s_PROP_500==1]
+Y_s_PROP_6500_NoReg <- Marco$NoReg[s_PROP_6500==1]
+
+Y_s_PROP_50_Nulos <- Marco$Nulos[s_PROP_50==1]
+Y_s_PROP_100_Nulos <- Marco$Nulos[s_PROP_100==1]
+Y_s_PROP_250_Nulos <- Marco$Nulos[s_PROP_250==1]
+Y_s_PROP_500_Nulos <- Marco$Nulos[s_PROP_500==1]
+Y_s_PROP_6500_Nulos <- Marco$Nulos[s_PROP_6500==1]
+
+@
+
+<<EstimacionPuntual_PP,echo=FALSE, cache=TRUE, dependson=c('ExtraccionMuestras_PP')>>=
+
+#Estimamos puntualmente utilizando Narain-Horvitz-Thompson
+EstTheta_50_EPN_PROP <- Est.Total.NHT(Y_s_PROP_50_EPN, VecPk_s_50)
+EstTheta_50_AMLO_PROP <- Est.Total.NHT(Y_s_PROP_50_AMLO, VecPk_s_50)
+EstTheta_50_JVM_PROP <- Est.Total.NHT(Y_s_PROP_50_JVM, VecPk_s_50)
+EstTheta_50_GQT_PROP <- Est.Total.NHT(Y_s_PROP_50_GQT, VecPk_s_50)
+EstTheta_50_NoReg_PROP <- Est.Total.NHT(Y_s_PROP_50_NoReg, VecPk_s_50)
+EstTheta_50_Nulos_PROP <- Est.Total.NHT(Y_s_PROP_50_Nulos, VecPk_s_50)
+
+EstTheta_100_EPN_PROP <- Est.Total.NHT(Y_s_PROP_100_EPN, VecPk_s_100)
+EstTheta_100_AMLO_PROP <- Est.Total.NHT(Y_s_PROP_100_AMLO, VecPk_s_100)
+EstTheta_100_JVM_PROP <- Est.Total.NHT(Y_s_PROP_100_JVM, VecPk_s_100)
+EstTheta_100_GQT_PROP <- Est.Total.NHT(Y_s_PROP_100_GQT, VecPk_s_100)
+EstTheta_100_NoReg_PROP <- Est.Total.NHT(Y_s_PROP_100_NoReg, VecPk_s_100)
+EstTheta_100_Nulos_PROP <- Est.Total.NHT(Y_s_PROP_100_Nulos, VecPk_s_100)
+
+EstTheta_250_EPN_PROP <- Est.Total.NHT(Y_s_PROP_250_EPN, VecPk_s_250)
+EstTheta_250_AMLO_PROP <- Est.Total.NHT(Y_s_PROP_250_AMLO, VecPk_s_250)
+EstTheta_250_JVM_PROP <- Est.Total.NHT(Y_s_PROP_250_JVM, VecPk_s_250)
+EstTheta_250_GQT_PROP <- Est.Total.NHT(Y_s_PROP_250_GQT, VecPk_s_250)
+EstTheta_250_NoReg_PROP <- Est.Total.NHT(Y_s_PROP_250_NoReg, VecPk_s_250)
+EstTheta_250_Nulos_PROP <- Est.Total.NHT(Y_s_PROP_250_Nulos, VecPk_s_250)
+
+EstTheta_500_EPN_PROP <- Est.Total.NHT(Y_s_PROP_500_EPN, VecPk_s_500)
+EstTheta_500_AMLO_PROP <- Est.Total.NHT(Y_s_PROP_500_AMLO, VecPk_s_500)
+EstTheta_500_JVM_PROP <- Est.Total.NHT(Y_s_PROP_500_JVM, VecPk_s_500)
+EstTheta_500_GQT_PROP <- Est.Total.NHT(Y_s_PROP_500_GQT, VecPk_s_500)
+EstTheta_500_NoReg_PROP <- Est.Total.NHT(Y_s_PROP_500_NoReg, VecPk_s_500)
+EstTheta_500_Nulos_PROP <- Est.Total.NHT(Y_s_PROP_500_Nulos, VecPk_s_500)
+
+EstTheta_6500_EPN_PROP <- Est.Total.NHT(Y_s_PROP_6500_EPN, VecPk_s_6500)
+EstTheta_6500_AMLO_PROP <- Est.Total.NHT(Y_s_PROP_6500_AMLO, VecPk_s_6500)
+EstTheta_6500_JVM_PROP <- Est.Total.NHT(Y_s_PROP_6500_JVM, VecPk_s_6500)
+EstTheta_6500_GQT_PROP <- Est.Total.NHT(Y_s_PROP_6500_GQT, VecPk_s_6500)
+EstTheta_6500_NoReg_PROP <- Est.Total.NHT(Y_s_PROP_6500_NoReg, VecPk_s_6500)
+EstTheta_6500_Nulos_PROP <- Est.Total.NHT(Y_s_PROP_6500_Nulos, VecPk_s_6500)
+
+@
+
+<<EstimacionVarianza_PP, echo=FALSE, cache=TRUE, dependson=c('EstimacionPuntual_PP')>>=
+
+#Calculemos las varianzas, pero aqui, como usamos probabilidades desiguales tiene más sentido utilizar SYG en lugar de NHT para la estimación de varianza, no tanto por el asunto de obtener valores negativos, sino porque es mejor estimador (quizas estas diferencias aquí no sean tan importantes porque tenemos una población grande y un tamano de muestra grande... estos argumentos son mas utiles cuando se esté operando en poblaciones moderadas y tamaños de muestra más pequeños, e.g. en algunos estratos en particular). Ademas el estimador de varianza de SYG es mas rapido porque hace la mitad de calculos.
+
+EstVarEstTheta_50_EPN_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_50_EPN, VecPk_s_50, MatPkl_PROP_50)
+EstVarEstTheta_100_EPN_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_100_EPN, VecPk_s_100, MatPkl_PROP_100)
+EstVarEstTheta_250_EPN_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_250_EPN, VecPk_s_250, MatPkl_PROP_250)
+EstVarEstTheta_500_EPN_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_500_EPN, VecPk_s_500, MatPkl_PROP_500)
+EstVarEstTheta_6500_EPN_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_6500_EPN, VecPk_s_6500, MatPkl_PROP_6500)
+
+EstVarEstTheta_50_AMLO_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_50_AMLO, VecPk_s_50, MatPkl_PROP_50)
+EstVarEstTheta_100_AMLO_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_100_AMLO, VecPk_s_100, MatPkl_PROP_100)
+EstVarEstTheta_250_AMLO_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_250_AMLO, VecPk_s_250, MatPkl_PROP_250)
+EstVarEstTheta_500_AMLO_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_500_AMLO, VecPk_s_500, MatPkl_PROP_500)
+EstVarEstTheta_6500_AMLO_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_6500_AMLO, VecPk_s_6500, MatPkl_PROP_6500)
+
+EstVarEstTheta_50_JVM_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_50_JVM, VecPk_s_50, MatPkl_PROP_50)
+EstVarEstTheta_100_JVM_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_100_JVM, VecPk_s_100, MatPkl_PROP_100)
+EstVarEstTheta_250_JVM_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_250_JVM, VecPk_s_250, MatPkl_PROP_250)
+EstVarEstTheta_500_JVM_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_500_JVM, VecPk_s_500, MatPkl_PROP_500)
+EstVarEstTheta_6500_JVM_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_6500_JVM, VecPk_s_6500, MatPkl_PROP_6500)
+
+EstVarEstTheta_50_GQT_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_50_GQT, VecPk_s_50, MatPkl_PROP_50)
+EstVarEstTheta_100_GQT_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_100_GQT, VecPk_s_100, MatPkl_PROP_100)
+EstVarEstTheta_250_GQT_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_250_GQT, VecPk_s_250, MatPkl_PROP_250)
+EstVarEstTheta_500_GQT_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_500_GQT, VecPk_s_500, MatPkl_PROP_500)
+EstVarEstTheta_6500_GQT_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_6500_GQT, VecPk_s_6500, MatPkl_PROP_6500)
+
+EstVarEstTheta_50_NoReg_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_50_NoReg, VecPk_s_50, MatPkl_PROP_50)
+EstVarEstTheta_100_NoReg_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_100_NoReg, VecPk_s_100, MatPkl_PROP_100)
+EstVarEstTheta_250_NoReg_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_250_NoReg, VecPk_s_250, MatPkl_PROP_250)
+EstVarEstTheta_500_NoReg_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_500_NoReg, VecPk_s_500, MatPkl_PROP_500)
+EstVarEstTheta_6500_NoReg_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_6500_NoReg, VecPk_s_6500, MatPkl_PROP_6500)
+
+EstVarEstTheta_50_Nulos_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_50_Nulos, VecPk_s_50, MatPkl_PROP_50)
+EstVarEstTheta_100_Nulos_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_100_Nulos, VecPk_s_100, MatPkl_PROP_100)
+EstVarEstTheta_250_Nulos_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_250_Nulos, VecPk_s_250, MatPkl_PROP_250)
+EstVarEstTheta_500_Nulos_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_500_Nulos, VecPk_s_500, MatPkl_PROP_500)
+EstVarEstTheta_6500_Nulos_PROP    <- VE.SYG.Total.NHT(Y_s_PROP_6500_Nulos, VecPk_s_6500, MatPkl_PROP_6500)
+
+#A partir de la varianza estimada, calculamos el error estandar
+
+StdErrEstTheta_50_EPN_PROP    <- sqrt(EstVarEstTheta_50_EPN_PROP)
+StdErrEstTheta_100_EPN_PROP    <- sqrt(EstVarEstTheta_100_EPN_PROP)
+StdErrEstTheta_250_EPN_PROP    <- sqrt(EstVarEstTheta_250_EPN_PROP)
+StdErrEstTheta_500_EPN_PROP    <- sqrt(EstVarEstTheta_500_EPN_PROP)
+StdErrEstTheta_6500_EPN_PROP    <- sqrt(EstVarEstTheta_6500_EPN_PROP)
+
+StdErrEstTheta_50_AMLO_PROP    <- sqrt(EstVarEstTheta_50_AMLO_PROP)
+StdErrEstTheta_100_AMLO_PROP    <- sqrt(EstVarEstTheta_100_AMLO_PROP)
+StdErrEstTheta_250_AMLO_PROP    <- sqrt(EstVarEstTheta_250_AMLO_PROP)
+StdErrEstTheta_500_AMLO_PROP    <- sqrt(EstVarEstTheta_500_AMLO_PROP)
+StdErrEstTheta_6500_AMLO_PROP    <- sqrt(EstVarEstTheta_6500_AMLO_PROP)
+
+StdErrEstTheta_50_JVM_PROP    <- sqrt(EstVarEstTheta_50_JVM_PROP)
+StdErrEstTheta_100_JVM_PROP    <- sqrt(EstVarEstTheta_100_JVM_PROP)
+StdErrEstTheta_250_JVM_PROP    <- sqrt(EstVarEstTheta_250_JVM_PROP)
+StdErrEstTheta_500_JVM_PROP    <- sqrt(EstVarEstTheta_500_JVM_PROP)
+StdErrEstTheta_6500_JVM_PROP    <- sqrt(EstVarEstTheta_6500_JVM_PROP)
+
+StdErrEstTheta_50_GQT_PROP    <- sqrt(EstVarEstTheta_50_GQT_PROP)
+StdErrEstTheta_100_GQT_PROP    <- sqrt(EstVarEstTheta_100_GQT_PROP)
+StdErrEstTheta_250_GQT_PROP    <- sqrt(EstVarEstTheta_250_GQT_PROP)
+StdErrEstTheta_500_GQT_PROP    <- sqrt(EstVarEstTheta_500_GQT_PROP)
+StdErrEstTheta_6500_GQT_PROP    <- sqrt(EstVarEstTheta_6500_GQT_PROP)
+
+StdErrEstTheta_50_NoReg_PROP    <- sqrt(EstVarEstTheta_50_NoReg_PROP)
+StdErrEstTheta_100_NoReg_PROP    <- sqrt(EstVarEstTheta_100_NoReg_PROP)
+StdErrEstTheta_250_NoReg_PROP    <- sqrt(EstVarEstTheta_250_NoReg_PROP)
+StdErrEstTheta_500_NoReg_PROP    <- sqrt(EstVarEstTheta_500_NoReg_PROP)
+StdErrEstTheta_6500_NoReg_PROP    <- sqrt(EstVarEstTheta_6500_NoReg_PROP)
+
+StdErrEstTheta_50_Nulos_PROP    <- sqrt(EstVarEstTheta_50_Nulos_PROP)
+StdErrEstTheta_100_Nulos_PROP    <- sqrt(EstVarEstTheta_100_Nulos_PROP)
+StdErrEstTheta_250_Nulos_PROP    <- sqrt(EstVarEstTheta_250_Nulos_PROP)
+StdErrEstTheta_500_Nulos_PROP    <- sqrt(EstVarEstTheta_500_Nulos_PROP)
+StdErrEstTheta_6500_Nulos_PROP    <- sqrt(EstVarEstTheta_6500_Nulos_PROP)
+@
+
+<<IC_PP,echo=FALSE, cache=TRUE, dependson=c('EstimacionVarianza_PP')>>=
+
+#Estimamos el error absoluto o precision al 95% de confianza
+AbsErrEstTheta_50_EPN_PROP <- StdErrEstTheta_50_EPN_PROP*qnorm(1-alpha/2)
+AbsErrEstTheta_100_EPN_PROP <- StdErrEstTheta_100_EPN_PROP*qnorm(1-alpha/2)
+AbsErrEstTheta_250_EPN_PROP <- StdErrEstTheta_250_EPN_PROP*qnorm(1-alpha/2)
+AbsErrEstTheta_500_EPN_PROP <- StdErrEstTheta_500_EPN_PROP*qnorm(1-alpha/2)
+AbsErrEstTheta_6500_EPN_PROP <- StdErrEstTheta_6500_EPN_PROP*qnorm(1-alpha/2)
+
+AbsErrEstTheta_50_AMLO_PROP <- StdErrEstTheta_50_AMLO_PROP*qnorm(1-alpha/2)
+AbsErrEstTheta_100_AMLO_PROP <- StdErrEstTheta_100_AMLO_PROP*qnorm(1-alpha/2)
+AbsErrEstTheta_250_AMLO_PROP <- StdErrEstTheta_250_AMLO_PROP*qnorm(1-alpha/2)
+AbsErrEstTheta_500_AMLO_PROP <- StdErrEstTheta_500_AMLO_PROP*qnorm(1-alpha/2)
+AbsErrEstTheta_6500_AMLO_PROP <- StdErrEstTheta_6500_AMLO_PROP*qnorm(1-alpha/2)
+
+AbsErrEstTheta_50_JVM_PROP <- StdErrEstTheta_50_JVM_PROP*qnorm(1-alpha/2)
+AbsErrEstTheta_100_JVM_PROP <- StdErrEstTheta_100_JVM_PROP*qnorm(1-alpha/2)
+AbsErrEstTheta_250_JVM_PROP <- StdErrEstTheta_250_JVM_PROP*qnorm(1-alpha/2)
+AbsErrEstTheta_500_JVM_PROP <- StdErrEstTheta_500_JVM_PROP*qnorm(1-alpha/2)
+AbsErrEstTheta_6500_JVM_PROP <- StdErrEstTheta_6500_JVM_PROP*qnorm(1-alpha/2)
+
+AbsErrEstTheta_50_GQT_PROP <- StdErrEstTheta_50_GQT_PROP*qnorm(1-alpha/2)
+AbsErrEstTheta_100_GQT_PROP <- StdErrEstTheta_100_GQT_PROP*qnorm(1-alpha/2)
+AbsErrEstTheta_250_GQT_PROP <- StdErrEstTheta_250_GQT_PROP*qnorm(1-alpha/2)
+AbsErrEstTheta_500_GQT_PROP <- StdErrEstTheta_500_GQT_PROP*qnorm(1-alpha/2)
+AbsErrEstTheta_6500_GQT_PROP <- StdErrEstTheta_6500_GQT_PROP*qnorm(1-alpha/2)
+
+AbsErrEstTheta_50_NoReg_PROP <- StdErrEstTheta_50_NoReg_PROP*qnorm(1-alpha/2)
+AbsErrEstTheta_100_NoReg_PROP <- StdErrEstTheta_100_NoReg_PROP*qnorm(1-alpha/2)
+AbsErrEstTheta_250_NoReg_PROP <- StdErrEstTheta_250_NoReg_PROP*qnorm(1-alpha/2)
+AbsErrEstTheta_500_NoReg_PROP <- StdErrEstTheta_500_NoReg_PROP*qnorm(1-alpha/2)
+AbsErrEstTheta_6500_NoReg_PROP <- StdErrEstTheta_6500_NoReg_PROP*qnorm(1-alpha/2)
+
+AbsErrEstTheta_50_Nulos_PROP <- StdErrEstTheta_50_Nulos_PROP*qnorm(1-alpha/2)
+AbsErrEstTheta_100_Nulos_PROP <- StdErrEstTheta_100_Nulos_PROP*qnorm(1-alpha/2)
+AbsErrEstTheta_250_Nulos_PROP <- StdErrEstTheta_250_Nulos_PROP*qnorm(1-alpha/2)
+AbsErrEstTheta_500_Nulos_PROP <- StdErrEstTheta_500_Nulos_PROP*qnorm(1-alpha/2)
+AbsErrEstTheta_6500_Nulos_PROP <- StdErrEstTheta_6500_Nulos_PROP*qnorm(1-alpha/2)
+
+
+#Calculamos los intervalos superior e inferior de confianza al 95% para cada muestra de cada candidato
+LimInfICEstTheta_50_EPN_PROP  <- EstTheta_50_EPN_PROP - AbsErrEstTheta_50_EPN_PROP
+LimSupICEstTheta_50_EPN_PROP  <- EstTheta_50_EPN_PROP + AbsErrEstTheta_50_EPN_PROP
+LimInfICEstTheta_100_EPN_PROP  <- EstTheta_100_EPN_PROP - AbsErrEstTheta_100_EPN_PROP
+LimSupICEstTheta_100_EPN_PROP  <- EstTheta_100_EPN_PROP + AbsErrEstTheta_100_EPN_PROP
+LimInfICEstTheta_250_EPN_PROP  <- EstTheta_250_EPN_PROP - AbsErrEstTheta_250_EPN_PROP
+LimSupICEstTheta_250_EPN_PROP  <- EstTheta_250_EPN_PROP + AbsErrEstTheta_250_EPN_PROP
+LimInfICEstTheta_500_EPN_PROP  <- EstTheta_500_EPN_PROP - AbsErrEstTheta_500_EPN_PROP
+LimSupICEstTheta_500_EPN_PROP  <- EstTheta_500_EPN_PROP + AbsErrEstTheta_500_EPN_PROP
+LimInfICEstTheta_6500_EPN_PROP  <- EstTheta_6500_EPN_PROP - AbsErrEstTheta_6500_EPN_PROP
+LimSupICEstTheta_6500_EPN_PROP  <- EstTheta_6500_EPN_PROP + AbsErrEstTheta_6500_EPN_PROP
+
+LimInfICEstTheta_50_AMLO_PROP  <- EstTheta_50_AMLO_PROP - AbsErrEstTheta_50_AMLO_PROP
+LimSupICEstTheta_50_AMLO_PROP  <- EstTheta_50_AMLO_PROP + AbsErrEstTheta_50_AMLO_PROP
+LimInfICEstTheta_100_AMLO_PROP <- EstTheta_100_AMLO_PROP - AbsErrEstTheta_100_AMLO_PROP
+LimSupICEstTheta_100_AMLO_PROP <- EstTheta_100_AMLO_PROP + AbsErrEstTheta_100_AMLO_PROP
+LimInfICEstTheta_250_AMLO_PROP  <- EstTheta_250_AMLO_PROP - AbsErrEstTheta_250_AMLO_PROP
+LimSupICEstTheta_250_AMLO_PROP  <- EstTheta_250_AMLO_PROP + AbsErrEstTheta_250_AMLO_PROP
+LimInfICEstTheta_500_AMLO_PROP  <- EstTheta_500_AMLO_PROP - AbsErrEstTheta_500_AMLO_PROP
+LimSupICEstTheta_500_AMLO_PROP  <- EstTheta_500_AMLO_PROP + AbsErrEstTheta_500_AMLO_PROP
+LimInfICEstTheta_6500_AMLO_PROP  <- EstTheta_6500_AMLO_PROP - AbsErrEstTheta_6500_AMLO_PROP
+LimSupICEstTheta_6500_AMLO_PROP  <- EstTheta_6500_AMLO_PROP + AbsErrEstTheta_6500_AMLO_PROP
+
+LimInfICEstTheta_50_JVM_PROP  <- EstTheta_50_JVM_PROP - AbsErrEstTheta_50_JVM_PROP
+LimSupICEstTheta_50_JVM_PROP  <- EstTheta_50_JVM_PROP + AbsErrEstTheta_50_JVM_PROP
+LimInfICEstTheta_100_JVM_PROP  <- EstTheta_100_JVM_PROP - AbsErrEstTheta_100_JVM_PROP
+LimSupICEstTheta_100_JVM_PROP  <- EstTheta_100_JVM_PROP + AbsErrEstTheta_100_JVM_PROP
+LimInfICEstTheta_250_JVM_PROP  <- EstTheta_250_JVM_PROP - AbsErrEstTheta_250_JVM_PROP
+LimSupICEstTheta_250_JVM_PROP  <- EstTheta_250_JVM_PROP + AbsErrEstTheta_250_JVM_PROP
+LimInfICEstTheta_500_JVM_PROP  <- EstTheta_500_JVM_PROP - AbsErrEstTheta_500_JVM_PROP
+LimSupICEstTheta_500_JVM_PROP  <- EstTheta_500_JVM_PROP + AbsErrEstTheta_500_JVM_PROP
+LimInfICEstTheta_6500_JVM_PROP  <- EstTheta_6500_JVM_PROP - AbsErrEstTheta_6500_JVM_PROP
+LimSupICEstTheta_6500_JVM_PROP  <- EstTheta_6500_JVM_PROP + AbsErrEstTheta_6500_JVM_PROP
+
+LimInfICEstTheta_50_GQT_PROP  <- EstTheta_50_GQT_PROP - AbsErrEstTheta_50_GQT_PROP
+LimSupICEstTheta_50_GQT_PROP  <- EstTheta_50_GQT_PROP + AbsErrEstTheta_50_GQT_PROP
+LimInfICEstTheta_100_GQT_PROP  <- EstTheta_100_GQT_PROP - AbsErrEstTheta_100_GQT_PROP
+LimSupICEstTheta_100_GQT_PROP  <- EstTheta_100_GQT_PROP + AbsErrEstTheta_100_GQT_PROP
+LimInfICEstTheta_250_GQT_PROP  <- EstTheta_250_GQT_PROP - AbsErrEstTheta_250_GQT_PROP
+LimSupICEstTheta_250_GQT_PROP  <- EstTheta_250_GQT_PROP + AbsErrEstTheta_250_GQT_PROP
+LimInfICEstTheta_500_GQT_PROP  <- EstTheta_500_GQT_PROP - AbsErrEstTheta_500_GQT_PROP
+LimSupICEstTheta_500_GQT_PROP  <- EstTheta_500_GQT_PROP + AbsErrEstTheta_500_GQT_PROP
+LimInfICEstTheta_6500_GQT_PROP  <- EstTheta_6500_GQT_PROP - AbsErrEstTheta_6500_GQT_PROP
+LimSupICEstTheta_6500_GQT_PROP  <- EstTheta_6500_GQT_PROP + AbsErrEstTheta_6500_GQT_PROP
+
+LimInfICEstTheta_50_NoReg_PROP  <- EstTheta_50_NoReg_PROP - AbsErrEstTheta_50_NoReg_PROP
+LimSupICEstTheta_50_NoReg_PROP <- EstTheta_50_NoReg_PROP + AbsErrEstTheta_50_NoReg_PROP
+LimInfICEstTheta_100_NoReg_PROP  <- EstTheta_100_NoReg_PROP - AbsErrEstTheta_100_NoReg_PROP
+LimSupICEstTheta_100_NoReg_PROP  <- EstTheta_100_NoReg_PROP + AbsErrEstTheta_100_NoReg_PROP
+LimInfICEstTheta_250_NoReg_PROP  <- EstTheta_250_NoReg_PROP - AbsErrEstTheta_250_NoReg_PROP
+LimSupICEstTheta_250_NoReg_PROP  <- EstTheta_250_NoReg_PROP + AbsErrEstTheta_250_NoReg_PROP
+LimInfICEstTheta_500_NoReg_PROP  <- EstTheta_500_NoReg_PROP - AbsErrEstTheta_500_NoReg_PROP
+LimSupICEstTheta_500_NoReg_PROP  <- EstTheta_500_NoReg_PROP + AbsErrEstTheta_500_NoReg_PROP
+LimInfICEstTheta_6500_NoReg_PROP  <- EstTheta_6500_NoReg_PROP - AbsErrEstTheta_6500_NoReg_PROP
+LimSupICEstTheta_6500_NoReg_PROP  <- EstTheta_6500_NoReg_PROP + AbsErrEstTheta_6500_NoReg_PROP
+
+LimInfICEstTheta_50_Nulos_PROP  <- EstTheta_50_Nulos_PROP - AbsErrEstTheta_50_Nulos_PROP
+LimSupICEstTheta_50_Nulos_PROP  <- EstTheta_50_Nulos_PROP + AbsErrEstTheta_50_Nulos_PROP
+LimInfICEstTheta_100_Nulos_PROP  <- EstTheta_100_Nulos_PROP - AbsErrEstTheta_100_Nulos_PROP
+LimSupICEstTheta_100_Nulos_PROP  <- EstTheta_100_Nulos_PROP + AbsErrEstTheta_100_Nulos_PROP
+LimInfICEstTheta_250_Nulos_PROP  <- EstTheta_250_Nulos_PROP - AbsErrEstTheta_250_Nulos_PROP
+LimSupICEstTheta_250_Nulos_PROP  <- EstTheta_250_Nulos_PROP + AbsErrEstTheta_250_Nulos_PROP
+LimInfICEstTheta_500_Nulos_PROP  <- EstTheta_500_Nulos_PROP - AbsErrEstTheta_500_Nulos_PROP
+LimSupICEstTheta_500_Nulos_PROP  <- EstTheta_500_Nulos_PROP + AbsErrEstTheta_500_Nulos_PROP
+LimInfICEstTheta_6500_Nulos_PROP  <- EstTheta_6500_Nulos_PROP - AbsErrEstTheta_6500_Nulos_PROP
+LimSupICEstTheta_6500_Nulos_PROP  <- EstTheta_6500_Nulos_PROP + AbsErrEstTheta_6500_Nulos_PROP
+@
+
+<<CVE_PP,echo=FALSE, cache=TRUE, dependson=c('EstimacionVarianza_PP')>>=
+#Calculamos el coeficiente de variacion para poder coomparar las estimaciones entre distintos tamaños de muestra para cada candidato
+
+CVEEstTheta_50_EPN_PROP       <- StdErrEstTheta_50_EPN_PROP/EstTheta_50_EPN_PROP
+CVEEstTheta_100_EPN_PROP       <- StdErrEstTheta_100_EPN_PROP/EstTheta_100_EPN_PROP
+CVEEstTheta_250_EPN_PROP       <- StdErrEstTheta_250_EPN_PROP/EstTheta_250_EPN_PROP
+CVEEstTheta_500_EPN_PROP       <- StdErrEstTheta_500_EPN_PROP/EstTheta_500_EPN_PROP
+CVEEstTheta_6500_EPN_PROP       <- StdErrEstTheta_6500_EPN_PROP/EstTheta_6500_EPN_PROP
+
+CVEEstTheta_50_AMLO_PROP       <- StdErrEstTheta_50_AMLO_PROP/EstTheta_50_AMLO_PROP
+CVEEstTheta_100_AMLO_PROP       <- StdErrEstTheta_100_AMLO_PROP/EstTheta_100_AMLO_PROP
+CVEEstTheta_250_AMLO_PROP      <- StdErrEstTheta_250_AMLO_PROP/EstTheta_250_AMLO_PROP
+CVEEstTheta_500_AMLO_PROP       <- StdErrEstTheta_500_AMLO_PROP/EstTheta_500_AMLO_PROP
+CVEEstTheta_6500_AMLO_PROP      <- StdErrEstTheta_6500_AMLO_PROP/EstTheta_6500_AMLO_PROP
+
+CVEEstTheta_50_JVM_PROP       <- StdErrEstTheta_50_JVM_PROP/EstTheta_50_JVM_PROP
+CVEEstTheta_100_JVM_PROP      <- StdErrEstTheta_100_JVM_PROP/EstTheta_100_JVM_PROP
+CVEEstTheta_250_JVM_PROP       <- StdErrEstTheta_250_JVM_PROP/EstTheta_250_JVM_PROP
+CVEEstTheta_500_JVM_PROP       <- StdErrEstTheta_500_JVM_PROP/EstTheta_500_JVM_PROP
+CVEEstTheta_6500_JVM_PROP       <- StdErrEstTheta_6500_JVM_PROP/EstTheta_6500_JVM_PROP
+
+CVEEstTheta_50_GQT_PROP       <- StdErrEstTheta_50_GQT_PROP/EstTheta_50_GQT_PROP
+CVEEstTheta_100_GQT_PROP       <- StdErrEstTheta_100_GQT_PROP/EstTheta_100_GQT_PROP
+CVEEstTheta_250_GQT_PROP       <- StdErrEstTheta_250_GQT_PROP/EstTheta_250_GQT_PROP
+CVEEstTheta_500_GQT_PROP       <- StdErrEstTheta_500_GQT_PROP/EstTheta_500_GQT_PROP
+CVEEstTheta_6500_GQT_PROP       <- StdErrEstTheta_6500_GQT_PROP/EstTheta_6500_GQT_PROP
+
+CVEEstTheta_50_NoReg_PROP       <- StdErrEstTheta_50_NoReg_PROP/EstTheta_50_NoReg_PROP
+CVEEstTheta_100_NoReg_PROP       <- StdErrEstTheta_100_NoReg_PROP/EstTheta_100_NoReg_PROP
+CVEEstTheta_250_NoReg_PROP       <- StdErrEstTheta_250_NoReg_PROP/EstTheta_250_NoReg_PROP
+CVEEstTheta_500_NoReg_PROP       <- StdErrEstTheta_500_NoReg_PROP/EstTheta_500_NoReg_PROP
+CVEEstTheta_6500_NoReg_PROP       <- StdErrEstTheta_6500_NoReg_PROP/EstTheta_6500_NoReg_PROP
+
+CVEEstTheta_50_Nulos_PROP       <- StdErrEstTheta_50_Nulos_PROP/EstTheta_50_Nulos_PROP
+CVEEstTheta_100_Nulos_PROP       <- StdErrEstTheta_100_Nulos_PROP/EstTheta_100_Nulos_PROP
+CVEEstTheta_250_Nulos_PROP       <- StdErrEstTheta_250_Nulos_PROP/EstTheta_250_Nulos_PROP
+CVEEstTheta_500_Nulos_PROP       <- StdErrEstTheta_500_Nulos_PROP/EstTheta_500_Nulos_PROP
+CVEEstTheta_6500_Nulos_PROP      <- StdErrEstTheta_6500_Nulos_PROP/EstTheta_6500_Nulos_PROP
+@
+
+<<DEFF_PP,echo=FALSE, cache=TRUE, dependson=c('EstimacionVarianza_PP')>>=
+
+#Calculamos el efecto de diseño estimado, recalculando la varianza del muestreo SI usando SYG
+deffEstTheta_50_EPN      <- EstVarEstTheta_50_EPN_PROP/VE.SYG.Total.NHT(Y_s_SI_50_EPN, Pks_50, MatPkl_SI_50)
+deffEstTheta_100_EPN      <- EstVarEstTheta_100_EPN_PROP/VE.SYG.Total.NHT(Y_s_SI_100_EPN, Pks_100, MatPkl_SI_100)
+deffEstTheta_250_EPN      <- EstVarEstTheta_250_EPN_PROP/VE.SYG.Total.NHT(Y_s_SI_250_EPN, Pks_250, MatPkl_SI_250)
+deffEstTheta_500_EPN      <- EstVarEstTheta_500_EPN_PROP/VE.SYG.Total.NHT(Y_s_SI_500_EPN, Pks_500, MatPkl_SI_500)
+deffEstTheta_6500_EPN      <- EstVarEstTheta_6500_EPN_PROP/VE.SYG.Total.NHT(Y_s_SI_6500_EPN, Pks_6500, MatPkl_SI_6500)
+
+deffEstTheta_50_AMLO      <- EstVarEstTheta_50_AMLO_PROP/VE.SYG.Total.NHT(Y_s_SI_50_AMLO, Pks_50, MatPkl_SI_50)
+deffEstTheta_100_AMLO      <- EstVarEstTheta_100_AMLO_PROP/VE.SYG.Total.NHT(Y_s_SI_100_AMLO, Pks_100, MatPkl_SI_100)
+deffEstTheta_250_AMLO      <- EstVarEstTheta_250_AMLO_PROP/VE.SYG.Total.NHT(Y_s_SI_250_AMLO, Pks_250, MatPkl_SI_250)
+deffEstTheta_500_AMLO      <- EstVarEstTheta_500_AMLO_PROP/VE.SYG.Total.NHT(Y_s_SI_500_AMLO, Pks_500, MatPkl_SI_500)
+deffEstTheta_6500_AMLO      <- EstVarEstTheta_6500_AMLO_PROP/VE.SYG.Total.NHT(Y_s_SI_6500_AMLO, Pks_6500, MatPkl_SI_6500)
+
+deffEstTheta_50_JVM      <- EstVarEstTheta_50_JVM_PROP/VE.SYG.Total.NHT(Y_s_SI_50_JVM, Pks_50, MatPkl_SI_50)
+deffEstTheta_100_JVM      <- EstVarEstTheta_100_JVM_PROP/VE.SYG.Total.NHT(Y_s_SI_100_JVM, Pks_100, MatPkl_SI_100)
+deffEstTheta_250_JVM      <- EstVarEstTheta_250_JVM_PROP/VE.SYG.Total.NHT(Y_s_SI_250_JVM, Pks_250, MatPkl_SI_250)
+deffEstTheta_500_JVM      <- EstVarEstTheta_500_JVM_PROP/VE.SYG.Total.NHT(Y_s_SI_500_JVM, Pks_500, MatPkl_SI_500)
+deffEstTheta_6500_JVM      <- EstVarEstTheta_6500_JVM_PROP/VE.SYG.Total.NHT(Y_s_SI_6500_JVM, Pks_6500, MatPkl_SI_6500)
+
+deffEstTheta_50_GQT      <- EstVarEstTheta_50_GQT_PROP/VE.SYG.Total.NHT(Y_s_SI_50_GQT, Pks_50, MatPkl_SI_50)
+deffEstTheta_100_GQT      <- EstVarEstTheta_100_GQT_PROP/VE.SYG.Total.NHT(Y_s_SI_100_GQT, Pks_100, MatPkl_SI_100)
+deffEstTheta_250_GQT      <- EstVarEstTheta_250_GQT_PROP/VE.SYG.Total.NHT(Y_s_SI_250_GQT, Pks_250, MatPkl_SI_250)
+deffEstTheta_500_GQT      <- EstVarEstTheta_500_GQT_PROP/VE.SYG.Total.NHT(Y_s_SI_500_GQT, Pks_500, MatPkl_SI_500)
+deffEstTheta_6500_GQT      <- EstVarEstTheta_6500_GQT_PROP/VE.SYG.Total.NHT(Y_s_SI_6500_GQT, Pks_6500, MatPkl_SI_6500)
+
+deffEstTheta_50_NoReg      <- EstVarEstTheta_50_NoReg_PROP/VE.SYG.Total.NHT(Y_s_SI_50_NoReg, Pks_50, MatPkl_SI_50)
+deffEstTheta_100_NoReg      <- EstVarEstTheta_100_NoReg_PROP/VE.SYG.Total.NHT(Y_s_SI_100_NoReg, Pks_100, MatPkl_SI_100)
+deffEstTheta_250_NoReg      <- EstVarEstTheta_250_NoReg_PROP/VE.SYG.Total.NHT(Y_s_SI_250_NoReg, Pks_250, MatPkl_SI_250)
+deffEstTheta_500_NoReg      <- EstVarEstTheta_500_NoReg_PROP/VE.SYG.Total.NHT(Y_s_SI_500_NoReg, Pks_500, MatPkl_SI_500)
+deffEstTheta_6500_NoReg      <- EstVarEstTheta_6500_NoReg_PROP/VE.SYG.Total.NHT(Y_s_SI_6500_NoReg, Pks_6500, MatPkl_SI_6500)
+
+deffEstTheta_50_Nulos      <- EstVarEstTheta_50_Nulos_PROP/VE.SYG.Total.NHT(Y_s_SI_50_Nulos, Pks_50, MatPkl_SI_50)
+deffEstTheta_100_Nulos      <- EstVarEstTheta_100_Nulos_PROP/VE.SYG.Total.NHT(Y_s_SI_100_Nulos, Pks_100, MatPkl_SI_100)
+deffEstTheta_250_Nulos      <- EstVarEstTheta_250_Nulos_PROP/VE.SYG.Total.NHT(Y_s_SI_250_Nulos, Pks_250, MatPkl_SI_250)
+deffEstTheta_500_Nulos      <- EstVarEstTheta_500_Nulos_PROP/VE.SYG.Total.NHT(Y_s_SI_500_Nulos, Pks_500, MatPkl_SI_500)
+deffEstTheta_6500_Nulos      <- EstVarEstTheta_6500_Nulos_PROP/VE.SYG.Total.NHT(Y_s_SI_6500_Nulos, Pks_6500, MatPkl_SI_6500)
+@
+
+<<MEtricasEPN_PP,echo=FALSE, cache=TRUE, dependson=c('DEFF_PP')>>=
+#Recopilamos metricas de Enrique Peña Nieto, muestreo PP
+
+Estimacion_EPN_PROP <- c(EstTheta_50_EPN_PROP, 
+                         EstTheta_100_EPN_PROP, 
+                         EstTheta_250_EPN_PROP, 
+                         EstTheta_500_EPN_PROP, 
+                         EstTheta_6500_EPN_PROP)
+
+ErrorEstandar_EPN_PROP <- c(StdErrEstTheta_50_EPN_PROP, 
+                            StdErrEstTheta_100_EPN_PROP, 
+                            StdErrEstTheta_250_EPN_PROP, 
+                            StdErrEstTheta_500_EPN_PROP, 
+                            StdErrEstTheta_6500_EPN_PROP)
+
+LimiteInferior_EPN_PROP <- c(LimInfICEstTheta_50_EPN_PROP, 
+                             LimInfICEstTheta_100_EPN_PROP, 
+                             LimInfICEstTheta_250_EPN_PROP, 
+                             LimInfICEstTheta_500_EPN_PROP, 
+                             LimInfICEstTheta_6500_EPN_PROP)
+
+LimiteSuperior_EPN_PROP <- c(LimSupICEstTheta_50_EPN_PROP, 
+                             LimSupICEstTheta_100_EPN_PROP, 
+                             LimSupICEstTheta_250_EPN_PROP, 
+                             LimSupICEstTheta_500_EPN_PROP, 
+                             LimSupICEstTheta_6500_EPN_PROP)
+
+AmplitudIntervalo_EPN_PROP <- c(LimSupICEstTheta_50_EPN_PROP-LimInfICEstTheta_50_EPN_PROP, 
+                                LimSupICEstTheta_100_EPN_PROP-LimInfICEstTheta_100_EPN_PROP,
+                                LimSupICEstTheta_250_EPN_PROP-LimInfICEstTheta_250_EPN_PROP,
+                                LimSupICEstTheta_500_EPN_PROP-LimInfICEstTheta_500_EPN_PROP,
+                                LimSupICEstTheta_6500_EPN_PROP-LimInfICEstTheta_6500_EPN_PROP)
+
+CVE_EPN_PROP <- c(CVEEstTheta_50_EPN_PROP, 
+                  CVEEstTheta_100_EPN_PROP, 
+                  CVEEstTheta_250_EPN_PROP, 
+                  CVEEstTheta_500_EPN_PROP, 
+                  CVEEstTheta_6500_EPN_PROP)
+
+Delta_EPN_PROP <- c(abs(total_EPN - EstTheta_50_EPN_PROP), 
+                    abs(total_EPN - EstTheta_100_EPN_PROP),
+                    abs(total_EPN - EstTheta_250_EPN_PROP), 
+                    abs(total_EPN - EstTheta_500_EPN_PROP), 
+                    abs(total_EPN - EstTheta_6500_EPN_PROP))
+
+Estimacion_EPN_PROP <- comma(Estimacion_EPN_PROP,digits=4)
+ErrorEstandar_EPN_PROP <- comma(ErrorEstandar_EPN_PROP,digits=4)
+LimiteInferior_EPN_PROP <- comma(LimiteInferior_EPN_PROP,digits=4)
+LimiteSuperior_EPN_PROP <- comma(LimiteSuperior_EPN_PROP,digits=4)
+AmplitudIntervalo_EPN_PROP <- comma(AmplitudIntervalo_EPN_PROP,digits=4)
+Delta_EPN_PROP <- comma(Delta_EPN_PROP,digits=4)
+@
+
+<<MEtricasAMLO_PP,echo=FALSE, cache=TRUE, dependson=c('DEFF_PP')>>=
+#Recopilamos métricas de Andrés Manuel López Obrador, muestreo PP
+
+Estimacion_AMLO_PROP <- c(EstTheta_50_AMLO_PROP, 
+                          EstTheta_100_AMLO_PROP, 
+                          EstTheta_250_AMLO_PROP, 
+                          EstTheta_500_AMLO_PROP, 
+                          EstTheta_6500_AMLO_PROP)
+
+ErrorEstandar_AMLO_PROP <- c(StdErrEstTheta_50_AMLO_PROP, 
+                             StdErrEstTheta_100_AMLO_PROP, 
+                             StdErrEstTheta_250_AMLO_PROP, 
+                             StdErrEstTheta_500_AMLO_PROP, 
+                             StdErrEstTheta_6500_AMLO_PROP)
+
+LimiteInferior_AMLO_PROP <- c(LimInfICEstTheta_50_AMLO_PROP, 
+                              LimInfICEstTheta_100_AMLO_PROP, 
+                              LimInfICEstTheta_250_AMLO_PROP, 
+                              LimInfICEstTheta_500_AMLO_PROP, 
+                              LimInfICEstTheta_6500_AMLO_PROP)
+
+LimiteSuperior_AMLO_PROP <- c(LimSupICEstTheta_50_AMLO_PROP, 
+                              LimSupICEstTheta_100_AMLO_PROP, 
+                              LimSupICEstTheta_250_AMLO_PROP, 
+                              LimSupICEstTheta_500_AMLO_PROP, 
+                              LimSupICEstTheta_6500_AMLO_PROP)
+
+AmplitudIntervalo_AMLO_PROP <- c(LimSupICEstTheta_50_AMLO_PROP-LimInfICEstTheta_50_AMLO_PROP, 
+                                 LimSupICEstTheta_100_AMLO_PROP-LimInfICEstTheta_100_AMLO_PROP,
+                                 LimSupICEstTheta_250_AMLO_PROP-LimInfICEstTheta_250_AMLO_PROP,
+                                 LimSupICEstTheta_500_AMLO_PROP-LimInfICEstTheta_500_AMLO_PROP,
+                                 LimSupICEstTheta_6500_AMLO_PROP-LimInfICEstTheta_6500_AMLO_PROP)
+
+CVE_AMLO_PROP <- c(CVEEstTheta_50_AMLO_PROP, 
+                   CVEEstTheta_100_AMLO_PROP, 
+                   CVEEstTheta_250_AMLO_PROP, 
+                   CVEEstTheta_500_AMLO_PROP, 
+                   CVEEstTheta_6500_AMLO_PROP)
+
+Delta_AMLO_PROP <- c(abs(total_AMLO - EstTheta_50_AMLO_PROP), 
+                     abs(total_AMLO - EstTheta_100_AMLO_PROP),
+                     abs(total_AMLO - EstTheta_250_AMLO_PROP), 
+                     abs(total_AMLO - EstTheta_500_AMLO_PROP), 
+                     abs(total_AMLO - EstTheta_6500_AMLO_PROP))
+
+Estimacion_AMLO_PROP <- comma(Estimacion_AMLO_PROP,digits=4)
+ErrorEstandar_AMLO_PROP <- comma(ErrorEstandar_AMLO_PROP,digits=4)
+LimiteInferior_AMLO_PROP <- comma(LimiteInferior_AMLO_PROP,digits=4)
+LimiteSuperior_AMLO_PROP <- comma(LimiteSuperior_AMLO_PROP,digits=4)
+AmplitudIntervalo_AMLO_PROP <- comma(AmplitudIntervalo_AMLO_PROP,digits=4)
+Delta_AMLO_PROP <- comma(Delta_AMLO_PROP,digits=4)
+
+@
+
+<<MEtricasJVM_PP,echo=FALSE, cache=TRUE, dependson=c('DEFF_PP')>>=
+#Recopilamos metricas de Josefina Vázquez Mota, muestreo PP
+
+Estimacion_JVM_PROP <- c(EstTheta_50_JVM_PROP, 
+                         EstTheta_100_JVM_PROP, 
+                         EstTheta_250_JVM_PROP, 
+                         EstTheta_500_JVM_PROP, 
+                         EstTheta_6500_JVM_PROP)
+
+ErrorEstandar_JVM_PROP <- c(StdErrEstTheta_50_JVM_PROP, 
+                            StdErrEstTheta_100_JVM_PROP, 
+                            StdErrEstTheta_250_JVM_PROP, 
+                            StdErrEstTheta_500_JVM_PROP, 
+                            StdErrEstTheta_6500_JVM_PROP)
+
+LimiteInferior_JVM_PROP <- c(LimInfICEstTheta_50_JVM_PROP, 
+                             LimInfICEstTheta_100_JVM_PROP, 
+                             LimInfICEstTheta_250_JVM_PROP, 
+                             LimInfICEstTheta_500_JVM_PROP, 
+                             LimInfICEstTheta_6500_JVM_PROP)
+
+LimiteSuperior_JVM_PROP <- c(LimSupICEstTheta_50_JVM_PROP, 
+                             LimSupICEstTheta_100_JVM_PROP, 
+                             LimSupICEstTheta_250_JVM_PROP, 
+                             LimSupICEstTheta_500_JVM_PROP, 
+                             LimSupICEstTheta_6500_JVM_PROP)
+
+AmplitudIntervalo_JVM_PROP <- c(LimSupICEstTheta_50_JVM_PROP-LimInfICEstTheta_50_JVM_PROP, 
+                                LimSupICEstTheta_100_JVM_PROP-LimInfICEstTheta_100_JVM_PROP,
+                                LimSupICEstTheta_250_JVM_PROP-LimInfICEstTheta_250_JVM_PROP,
+                                LimSupICEstTheta_500_JVM_PROP-LimInfICEstTheta_500_JVM_PROP,
+                                LimSupICEstTheta_6500_JVM_PROP-LimInfICEstTheta_6500_JVM_PROP)
+
+CVE_JVM_PROP <- c(CVEEstTheta_50_JVM_PROP, 
+                  CVEEstTheta_100_JVM_PROP, 
+                  CVEEstTheta_250_JVM_PROP, 
+                  CVEEstTheta_500_JVM_PROP, 
+                  CVEEstTheta_6500_JVM_PROP)
+
+Delta_JVM_PROP <- c(abs(total_JVM - EstTheta_50_JVM_PROP), 
+                  abs(total_JVM - EstTheta_100_JVM_PROP),
+                  abs(total_JVM - EstTheta_250_JVM_PROP), 
+                  abs(total_JVM - EstTheta_500_JVM_PROP), 
+                  abs(total_JVM - EstTheta_6500_JVM_PROP))
+
+Estimacion_JVM_PROP <- comma(Estimacion_JVM_PROP,digits=4)
+ErrorEstandar_JVM_PROP <- comma(ErrorEstandar_JVM_PROP,digits=4)
+LimiteInferior_JVM_PROP <- comma(LimiteInferior_JVM_PROP,digits=4)
+LimiteSuperior_JVM_PROP <- comma(LimiteSuperior_JVM_PROP,digits=4)
+AmplitudIntervalo_JVM_PROP <- comma(AmplitudIntervalo_JVM_PROP,digits=4)
+Delta_JVM_PROP <- comma(Delta_JVM_PROP,digits=4)
+@
+
+<<MEtricasGQT_PP,echo=FALSE, cache=TRUE, dependson=c('DEFF_PP')>>=
+#Recopilamos metricas de Gabriel Quadri de la Torre, muestreo PP
+
+Estimacion_GQT_PROP <- c(EstTheta_50_GQT_PROP, 
+                         EstTheta_100_GQT_PROP, 
+                         EstTheta_250_GQT_PROP, 
+                         EstTheta_500_GQT_PROP, 
+                         EstTheta_6500_GQT_PROP)
+
+ErrorEstandar_GQT_PROP <- c(StdErrEstTheta_50_GQT_PROP, 
+                            StdErrEstTheta_100_GQT_PROP, 
+                            StdErrEstTheta_250_GQT_PROP, 
+                            StdErrEstTheta_500_GQT_PROP, 
+                            StdErrEstTheta_6500_GQT_PROP)
+
+LimiteInferior_GQT_PROP <- c(LimInfICEstTheta_50_GQT_PROP, 
+                             LimInfICEstTheta_100_GQT_PROP, 
+                             LimInfICEstTheta_250_GQT_PROP, 
+                             LimInfICEstTheta_500_GQT_PROP, 
+                             LimInfICEstTheta_6500_GQT_PROP)
+
+LimiteSuperior_GQT_PROP <- c(LimSupICEstTheta_50_GQT_PROP, 
+                             LimSupICEstTheta_100_GQT_PROP, 
+                             LimSupICEstTheta_250_GQT_PROP, 
+                             LimSupICEstTheta_500_GQT_PROP, 
+                             LimSupICEstTheta_6500_GQT_PROP)
+
+AmplitudIntervalo_GQT_PROP <- c(LimSupICEstTheta_50_GQT_PROP-LimInfICEstTheta_50_GQT_PROP, 
+                                LimSupICEstTheta_100_GQT_PROP-LimInfICEstTheta_100_GQT_PROP,
+                                LimSupICEstTheta_250_GQT_PROP-LimInfICEstTheta_250_GQT_PROP,
+                                LimSupICEstTheta_500_GQT_PROP-LimInfICEstTheta_500_GQT_PROP,
+                                LimSupICEstTheta_6500_GQT_PROP-LimInfICEstTheta_6500_GQT_PROP)
+
+CVE_GQT_PROP <- c(CVEEstTheta_50_GQT_PROP, 
+                  CVEEstTheta_100_GQT_PROP, 
+                  CVEEstTheta_250_GQT_PROP, 
+                  CVEEstTheta_500_GQT_PROP, 
+                  CVEEstTheta_6500_GQT_PROP)
+
+Delta_GQT_PROP <- c(abs(total_GQT - EstTheta_50_GQT_PROP), 
+                    abs(total_GQT - EstTheta_100_GQT_PROP),
+                    abs(total_GQT - EstTheta_250_GQT_PROP), 
+                    abs(total_GQT - EstTheta_500_GQT_PROP), 
+                    abs(total_GQT - EstTheta_6500_GQT_PROP))
+
+Estimacion_GQT_PROP <- comma(Estimacion_GQT_PROP,digits=4)
+ErrorEstandar_GQT_PROP <- comma(ErrorEstandar_GQT_PROP,digits=4)
+LimiteInferior_GQT_PROP <- comma(LimiteInferior_GQT_PROP,digits=4)
+LimiteSuperior_GQT_PROP <- comma(LimiteSuperior_GQT_PROP,digits=4)
+AmplitudIntervalo_GQT_PROP <- comma(AmplitudIntervalo_GQT_PROP,digits=4)
+Delta_GQT_PROP <- comma(Delta_GQT_PROP,digits=4)
+
+@
+
+<<MEtricasNoReg_PP,echo=FALSE, cache=TRUE, dependson=c('DEFF_PP')>>=
+#Recopilamos metricas de No Registrados, muestreo PP
+
+Estimacion_NoReg_PROP <- c(EstTheta_50_NoReg_PROP, 
+                           EstTheta_100_NoReg_PROP, 
+                           EstTheta_250_NoReg_PROP, 
+                           EstTheta_500_NoReg_PROP, 
+                           EstTheta_6500_NoReg_PROP)
+
+ErrorEstandar_NoReg_PROP <- c(StdErrEstTheta_50_NoReg_PROP, 
+                              StdErrEstTheta_100_NoReg_PROP, 
+                              StdErrEstTheta_250_NoReg_PROP, 
+                              StdErrEstTheta_500_NoReg_PROP, 
+                              StdErrEstTheta_6500_NoReg_PROP)
+
+LimiteInferior_NoReg_PROP <- c(LimInfICEstTheta_50_NoReg_PROP, 
+                               LimInfICEstTheta_100_NoReg_PROP, 
+                               LimInfICEstTheta_250_NoReg_PROP, 
+                               LimInfICEstTheta_500_NoReg_PROP, 
+                               LimInfICEstTheta_6500_NoReg_PROP)
+
+LimiteSuperior_NoReg_PROP <- c(LimSupICEstTheta_50_NoReg_PROP, 
+                               LimSupICEstTheta_100_NoReg_PROP, 
+                               LimSupICEstTheta_250_NoReg_PROP, 
+                               LimSupICEstTheta_500_NoReg_PROP, 
+                               LimSupICEstTheta_6500_NoReg_PROP)
+
+AmplitudIntervalo_NoReg_PROP <- c(LimSupICEstTheta_50_NoReg_PROP-LimInfICEstTheta_50_NoReg_PROP, 
+                                  LimSupICEstTheta_100_NoReg_PROP-LimInfICEstTheta_100_NoReg_PROP,
+                                  LimSupICEstTheta_250_NoReg_PROP-LimInfICEstTheta_250_NoReg_PROP,
+                                  LimSupICEstTheta_500_NoReg_PROP-LimInfICEstTheta_500_NoReg_PROP,
+                                  LimSupICEstTheta_6500_NoReg_PROP-LimInfICEstTheta_6500_NoReg_PROP)
+
+CVE_NoReg_PROP <- c(CVEEstTheta_50_NoReg_PROP, 
+                    CVEEstTheta_100_NoReg_PROP, 
+                    CVEEstTheta_250_NoReg_PROP, 
+                    CVEEstTheta_500_NoReg_PROP, 
+                    CVEEstTheta_6500_NoReg_PROP)
+
+Delta_NoReg_PROP <- c(abs(total_NoReg - EstTheta_50_NoReg_PROP), 
+                      abs(total_NoReg - EstTheta_100_NoReg_PROP),
+                      abs(total_NoReg - EstTheta_250_NoReg_PROP), 
+                      abs(total_NoReg - EstTheta_500_NoReg_PROP), 
+                      abs(total_NoReg - EstTheta_6500_NoReg_PROP))
+
+Estimacion_NoReg_PROP <- comma(Estimacion_NoReg_PROP,digits=4)
+ErrorEstandar_NoReg_PROP <- comma(ErrorEstandar_NoReg_PROP,digits=4)
+LimiteInferior_NoReg_PROP <- comma(LimiteInferior_NoReg_PROP,digits=4)
+LimiteSuperior_NoReg_PROP <- comma(LimiteSuperior_NoReg_PROP,digits=4)
+AmplitudIntervalo_NoReg_PROP <- comma(AmplitudIntervalo_NoReg_PROP,digits=4)
+Delta_NoReg_PROP <- comma(Delta_NoReg_PROP,digits=4)
+
+@
+
+<<MEtricasNulos_PP,echo=FALSE, cache=TRUE, dependson=c('DEFF_PP')>>=
+#Recopilamos metricas de Nulos, muestreo PP
+
+Estimacion_Nulos_PROP <- c(EstTheta_50_Nulos_PROP, 
+                           EstTheta_100_Nulos_PROP, 
+                           EstTheta_250_Nulos_PROP, 
+                           EstTheta_500_Nulos_PROP, 
+                           EstTheta_6500_Nulos_PROP)
+
+ErrorEstandar_Nulos_PROP <- c(StdErrEstTheta_50_Nulos_PROP, 
+                              StdErrEstTheta_100_Nulos_PROP, 
+                              StdErrEstTheta_250_Nulos_PROP, 
+                              StdErrEstTheta_500_Nulos_PROP, 
+                              StdErrEstTheta_6500_Nulos_PROP)
+
+LimiteInferior_Nulos_PROP <- c(LimInfICEstTheta_50_Nulos_PROP, 
+                               LimInfICEstTheta_100_Nulos_PROP, 
+                               LimInfICEstTheta_250_Nulos_PROP, 
+                               LimInfICEstTheta_500_Nulos_PROP, 
+                               LimInfICEstTheta_6500_Nulos_PROP)
+
+LimiteSuperior_Nulos_PROP <- c(LimSupICEstTheta_50_Nulos_PROP, 
+                               LimSupICEstTheta_100_Nulos_PROP, 
+                               LimSupICEstTheta_250_Nulos_PROP, 
+                               LimSupICEstTheta_500_Nulos_PROP, 
+                               LimSupICEstTheta_6500_Nulos_PROP)
+
+AmplitudIntervalo_Nulos_PROP <- c(LimSupICEstTheta_50_Nulos_PROP-LimInfICEstTheta_50_Nulos_PROP, 
+                                  LimSupICEstTheta_100_Nulos_PROP-LimInfICEstTheta_100_Nulos_PROP,
+                                  LimSupICEstTheta_250_Nulos_PROP-LimInfICEstTheta_250_Nulos_PROP,
+                                  LimSupICEstTheta_500_Nulos_PROP-LimInfICEstTheta_500_Nulos_PROP,
+                                  LimSupICEstTheta_6500_Nulos_PROP-LimInfICEstTheta_6500_Nulos_PROP)
+
+CVE_Nulos_PROP <- c(CVEEstTheta_50_Nulos_PROP, 
+                    CVEEstTheta_100_Nulos_PROP, 
+                    CVEEstTheta_250_Nulos_PROP, 
+                    CVEEstTheta_500_Nulos_PROP, 
+                    CVEEstTheta_6500_Nulos_PROP)
+
+Delta_Nulos_PROP <- c(abs(total_Nulos - EstTheta_50_Nulos_PROP), 
+                      abs(total_Nulos - EstTheta_100_Nulos_PROP),
+                      abs(total_Nulos - EstTheta_250_Nulos_PROP), 
+                      abs(total_Nulos - EstTheta_500_Nulos_PROP), 
+                      abs(total_Nulos - EstTheta_6500_Nulos_PROP))
+
+Estimacion_Nulos_PROP <- comma(Estimacion_Nulos_PROP,digits=4)
+ErrorEstandar_Nulos_PROP <- comma(ErrorEstandar_Nulos_PROP,digits=4)
+LimiteInferior_Nulos_PROP <- comma(LimiteInferior_Nulos_PROP,digits=4)
+LimiteSuperior_Nulos_PROP <- comma(LimiteSuperior_Nulos_PROP,digits=4)
+AmplitudIntervalo_Nulos_PROP <- comma(AmplitudIntervalo_Nulos_PROP,digits=4)
+Delta_Nulos_PROP <- comma(Delta_Nulos_PROP,digits=4)
+
+@
+
+El porcentaje de secciones utilizado, así como el listado nominal y el porcentaje de listado nominal utilizado en cada muestra para cada uno de los métodos se encuentra en la tabla \ref{Tabla:listadoNom}. Un aspecto a resaltar es que el porcentaje de secciones nominales utilizados en la muestra es menor a 1\% en 4 de los 5 casos. El efecto de utilizar probabilidades proporcionales al listado nominal se puede notar en el hecho de que el porcentaje del listado nominal considerado en cada muestra bajo muestreo aleatorio simple, es menor que el de muestreo con probabilidades proporcionales para todos los casos. De hecho, la mayoría de las muestras utilizan menos del 1\% del listado nominal para realizar las estimaciones. \\
+
+<<tabla_porcentaje,echo=FALSE, cache=TRUE, dependson=c('datos'),results='asis'>>=
+
+tabla_porcentaje<-data.frame(n=c(50, 100, 250, 500, 6500),
+                             PorcSecciones=c(50, 100, 250, 500, 6500)/nrow(Marco)*100,
+                             TotListNom_SI=c(sum(Marco$LISTA.NOMINAL[which(s_SI_50==1)]),sum(Marco$LISTA.NOMINAL[which(s_SI_100==1)]),sum(Marco$LISTA.NOMINAL[which(s_SI_250==1)]),sum(Marco$LISTA.NOMINAL[which(s_SI_500==1)]),sum(Marco$LISTA.NOMINAL[which(s_SI_6500==1)])),
+                             PropListNom_SI=c(sum(Marco$LISTA.NOMINAL[which(s_SI_50==1)]),sum(Marco$LISTA.NOMINAL[which(s_SI_100==1)]),sum(Marco$LISTA.NOMINAL[which(s_SI_250==1)]),sum(Marco$LISTA.NOMINAL[which(s_SI_500==1)]),sum(Marco$LISTA.NOMINAL[which(s_SI_6500==1)]))/sum(Marco$LISTA.NOMINAL)*100,
+                             TotListNom_PROP=c(sum(Marco$LISTA.NOMINAL[which(s_PROP_50==1)]),sum(Marco$LISTA.NOMINAL[which(s_PROP_100==1)]),sum(Marco$LISTA.NOMINAL[which(s_PROP_250==1)]),sum(Marco$LISTA.NOMINAL[which(s_PROP_500==1)]),sum(Marco$LISTA.NOMINAL[which(s_PROP_6500==1)])),
+                             PropListNom_PROP=c(sum(Marco$LISTA.NOMINAL[which(s_PROP_50==1)]),sum(Marco$LISTA.NOMINAL[which(s_PROP_100==1)]),sum(Marco$LISTA.NOMINAL[which(s_PROP_250==1)]),sum(Marco$LISTA.NOMINAL[which(s_PROP_500==1)]),sum(Marco$LISTA.NOMINAL[which(s_PROP_6500==1)]))/sum(Marco$LISTA.NOMINAL)*100)
+
+tabla_porcentaje$n<-digitos(as.numeric(tabla_porcentaje$n),nDigits = 0)
+tabla_porcentaje$TotListNom_SI<-prettyNum(tabla_porcentaje$TotListNom_SI,big.mark = ",")
+tabla_porcentaje$TotListNom_PROP<-prettyNum(tabla_porcentaje$TotListNom_PROP,big.mark=",")
+tabla_porcentaje$PropListNom_SI<-digitos(as.numeric(tabla_porcentaje$PropListNom_SI),nDigits = 4)
+tabla_porcentaje$PropListNom_PROP<-digitos(as.numeric(tabla_porcentaje$PropListNom_PROP),nDigits = 4)
+
+# Se da formato xtable.
+tabla_porcentaje<-xtable(tabla_porcentaje,caption=paste("Listado nominal por tamaño de muestra y tipo de diseño muestral."),label="Tabla:listadoNom")
+
+# Se alinean las columnas
+align(tabla_porcentaje)<-"lrr|rr|rr"
+
+addtorow<-list()
+addtorow$pos<-list(0,0)
+addtorow$command<-c("No. Secciones & \\% & \\multicolumn{2}{|c}{Aleatorio Simple} & \\multicolumn{2}{|c}{Prob. Proporcionales}\\\\\n",
+                    "\\cline{3-6} en muestra & secciones & Total Votantes & \\% List. Nom & Total Votantes & \\% List. Nom \\\\\n")
+
+
+# Se imprime la tabla
+print(tabla_porcentaje,print.placement='H',NA.string="",latex.environments="center",add.to.row=addtorow, caption.placement="top",include.rownames=FALSE,include.colnames=FALSE,hline.after=c(-1,0,nrow(tabla_porcentaje)),size="footnotesize",scalebox=0.9,sanitize.text.function = function(x) x)
+
+@
+
+La figura \ref{fig:GraficaCandidatos} compara el total de votos estimado para cada candidato bajo los dos métodos y para los distintos tamaños de muestra. Por su parte, la tabla \ref{Tabla:metricasCandidatos} resume los resultados de las estimaciones. Un vistazo general tanto de las gráficas como de las métricas, sugiere que el muestreo con probabilidades proporcionales da mejores estimaciones que el muestreo aleatorio simple en la mayoría de los casos; dado que en este ejercicio en particular se puede conocer el total de votos verdadero por cada candidato, es fácil verificar esta afirmación. A pesar de utilizar un porcentaje tan pequeño, los resultados obtenidos con muestreo con probabilidades proporcionales son satisfactorios para la mayoría de las muestras. En contraste, los resultados obtenidos con muestreo aleatorio simple para tamaños de muestra de 50 y 100 sobreestiman el total de votos para la mayoría de los candidatos, pero son cercanos al verdadero valor en muestras grandes. \\
+
+De la figura \ref{fig:GraficaCandidatos} y de las columnas 3 a 5 de la tabla \ref{Tabla:metricasCandidatos} se observa, como era de esperarse, que la diferencia entre el total estimado con SI y el verdadero total de votos decrece (en valor absoluto) conforme se incrementa el tamaño de muestra para los candidatos AMLO, EPN y GQT; sin embargo, para JVM, Nulos y No Registrdos esto no se cumple. Para el muestreo PP de manera general se observa que para el tamaño de muestra 250 la diferencia (en valor absoluto) entre el total estimado y el verdadero valor se incrementa drásticamente para algunos candidatos (AMLO, JVM y Nulos). Además, en el SI la mejor estimación se obtiene para el mayor tamaño de muestra;  en contraste, bajo PP en el 50\% de los casos (AMLO, JVM, Nulos) se obtiene la estimación más cercana para la muestra de tamaño 500 y en el otro 50\% de los casos (EPN, GQT y No Registrados) se obtiene la mejor estimación con el mayor tamaño de muestra. Con esto se puede concluir que utilizar muestreo con probabilidades proporcionales puede ayudar realizar un muestreo más eficiente y menos costos si la variable de interés esta fuermente correlacionada con la variable utilizada para obtener las probabilidades de inclusión. \\
+
+De manera general, en las columnas 6 a 9 de la tabla \ref{Tabla:metricasCandidatos} se puede notar que los errores estándar y, por ende, los intervalos de confianza, son más pequeños bajo PP que bajo SI. En general, la amplitud del intervalo disminuye conforme aumenta el tamaño de muestra. Además, los verdaderos votos totales quedaron contenidos dentro de los intervalos de confianza a excepción de 4 casos; de éstos tres corresponden a SI (GQT con tamaño de muestra 250 y votos nulos con tamaños de muestra 250 y 6500) y únicamente uno a PP (AMLO con tamaño de muestra 6500).  \\
+
+<<DatosGraficaCandidatos,echo=FALSE,warning=FALSE,cache=TRUE, dependson=c('MetricasEPN_SI','MetricasAMLO_SI','MetricasJVM_SI','MetricasGQT_SI','MetricasNoReg_SI','MetricasNulos_SI','MetricasEPN_PP','MetricasAMLO_PP','MetricasJVM_PP','MetricasGQT_PP','MetricasNoReg_PP','MetricasNulos_PP')>>=
+
+# Se crean los vectores del nuevo data frame. 
+candidatox <- c(rep("EPN",5), rep("AMLO",5), rep("JVM", 5), rep("GQT",5), rep("NoReg",5), rep("Nulos",5))
+
+AleatorioSimplex <- c(Estimacion_EPN_SI, 
+                      Estimacion_AMLO_SI, 
+                      Estimacion_JVM_SI, 
+                      Estimacion_GQT_SI, 
+                      Estimacion_NoReg_SI, 
+                      Estimacion_Nulos_SI)
+
+ProbabilidadesDesigualesx <- c(Estimacion_EPN_PROP,
+                               Estimacion_AMLO_PROP,
+                               Estimacion_JVM_PROP,
+                               Estimacion_GQT_PROP,
+                               Estimacion_NoReg_PROP,
+                               Estimacion_Nulos_PROP)
+
+ValorVerdaderox <- c(Total_EPN, Total_AMLO, Total_JVM, Total_GQT, Total_NoReg, Total_Nulos)
+
+Muestra <- c("50", "100", "250", "500", "6500")
+Muestrax <- c(rep(Muestra,18))
+
+Candidatox <- c(rep(candidatox, 3))
+Candidatox<-factor(Candidatox,levels=c('AMLO','EPN','JVM','GQT','Nulos','NoReg'))
+
+Valorx <- c(AleatorioSimplex, ProbabilidadesDesigualesx, ValorVerdaderox)
+
+Metodox <- c(rep("Aleatorio Simple",30),rep("Prob. Proporcional",30),rep("Total Verdadero",30))
+
+# Se crea el data frame 
+plotearx <- data_frame(Valorx, Candidatox, Muestrax, Metodox)
+
+colnames(plotearx) <- c("Valor","Candidato","Muestra","Metodo")
+
+plotearx1<-plotearx%>%filter(Candidato%in%c("EPN","AMLO","JVM"))
+plotearx2<-plotearx%>%filter(Candidato%in%c("GQT","Nulos"))
+plotearx3<-plotearx%>%filter(Candidato=="NoReg")
+
+@
+
+<<GraficaCandidatos,echo=FALSE,cache=TRUE, warning=FALSE, dependson=c('DatosGraficaCandidatos'),fig.pos='H',fig.width=12,fig.height=13,fig.cap='Total de votos por candidato para los distintos tamaños de muestra y los distintos métodos de estimación.'>>=
+
+#Gráfica de Candidatos 1
+q1<-ggplot(plotearx1, aes(y=Valor/1e6, x=Muestra, color=Metodo, fill=Metodo))+theme_bw() + 
+    geom_bar( stat="identity", position = "dodge") + 
+    aes(x = fct_inorder(Muestra)) +
+    labs(y="Millones de votos", 
+         x="") +
+  ggtitle("Resultados Estimados Para las Elecciones en México 2012 por Candidato")+
+   theme(plot.title = element_text(hjust=.5, size = 17.5),
+         axis.title.x=element_text(size=12.5),
+        axis.text.x = element_text(angle = 90, hjust = .5,size=15),
+        axis.title.y=element_text(size=12.5),
+        axis.text.y=element_text(size=15),
+        strip.text = element_text(size=15),
+        legend.text=element_text(size=15),
+        legend.title=element_text(size=15))+
+    facet_wrap(~Candidato, ncol = 3, scales = "fixed")+
+  theme(legend.position="bottom")
+
+#Gráfica de Candidatos, escala fija
+q2<-ggplot(plotearx2, aes(y=Valor/1e6, x=Muestra, color=Metodo, fill=Metodo))+theme_bw() + 
+    geom_bar( stat="identity", position = "dodge") + 
+    aes(x = fct_inorder(Muestra)) +
+    labs(y="Millones de votos", 
+         x="") +
+   theme(plot.title = element_text(hjust=.5, size = 15),
+         axis.title.x=element_text(size=15),
+        axis.text.x = element_text(angle = 90, hjust = .5,size=15),
+        axis.title.y=element_text(size=15),
+        axis.text.y=element_text(size=15),
+        strip.text = element_text(size=15),
+        legend.text=element_text(size=15),
+        legend.title=element_text(size=15))+
+    facet_wrap(~Candidato, ncol = 3, scales = "fixed")+
+  theme(legend.position="bottom")
+
+
+#Gráfica de Candidatos, escala fija
+q3<-ggplot(plotearx3, aes(y=Valor/1e6, x=Muestra, color=Metodo, fill=Metodo))+theme_bw() + 
+    geom_bar( stat="identity", position = "dodge") + 
+    aes(x = fct_inorder(Muestra)) +
+    labs(y="Millones de votos", 
+         x="Tamaño de muestra") +
+   theme(plot.title = element_text(hjust=.5, size = 15),
+         axis.title.x=element_text(size=15),
+        axis.text.x = element_text(angle = 90, hjust = .5,size=15),
+        axis.title.y=element_text(size=15),
+        axis.text.y=element_text(size=15),
+        strip.text = element_text(size=15),
+        legend.text=element_text(size=15),
+        legend.title=element_text(size=15))+
+    facet_wrap(~Candidato, ncol = 3, scales = "fixed")+
+  theme(legend.position="bottom")
+
+
+# Se imprimen las gráficas de forma conjunta con leyenda compartida. 
+ggarrange(q1,q2,q3,nrow=3,ncol=1, common.legend = TRUE, legend = "bottom")
+
+@
+
+<<TablasMetricas,echo=FALSE,  cache=TRUE, dependson=c('MetricasEPN_SI','MetricasAMLO_SI','MetricasJVM_SI','MetricasGQT_SI','MetricasNoReg_SI','MetricasNulos_SI','MetricasEPN_PP','MetricasAMLO_PP','MetricasJVM_PP','MetricasGQT_PP','MetricasNoReg_PP','MetricasNulos_PP'),results='asis'>>=
+#Creamos Tablas de métricas
+
+metodo <- c("SI","SI","SI","SI","SI","PP", "PP","PP","PP","PP")
+
+muestra <- c("50", "100", "250", "500", "6500")
+
+metricas_EPN <- data_frame(metodo,c(muestra,muestra), c(Total_EPN,Total_EPN),c(Estimacion_EPN_SI, Estimacion_EPN_PROP), c(Total_EPN-Estimacion_EPN_SI, Total_EPN-Estimacion_EPN_PROP), c( ErrorEstandar_EPN_SI,ErrorEstandar_EPN_PROP), c(LimiteInferior_EPN_SI,LimiteInferior_EPN_PROP), c(LimiteSuperior_EPN_SI,LimiteSuperior_EPN_PROP), c(AmplitudIntervalo_EPN_SI,AmplitudIntervalo_EPN_PROP), c(CVE_EPN_SI,CVE_EPN_PROP),c(rep(1,5),deffEstTheta_50_EPN,deffEstTheta_100_EPN,deffEstTheta_250_EPN,deffEstTheta_500_EPN,deffEstTheta_6500_EPN))
+
+colnames(metricas_EPN) <- c("Metodo", "n","TotalVerdadero","TotalEst","Diferencia","ErrorEstandar", "LimiteInf", "LimiteSup","Amplitud", "CVE", "DEFF")
+
+metricas_AMLO <- data_frame(metodo,c(muestra,muestra), c(Total_AMLO,Total_AMLO),c(Estimacion_AMLO_SI, Estimacion_AMLO_PROP),c(Total_AMLO-Estimacion_AMLO_SI, Total_AMLO-Estimacion_AMLO_PROP), c( ErrorEstandar_AMLO_SI,ErrorEstandar_AMLO_PROP), c(LimiteInferior_AMLO_SI,LimiteInferior_AMLO_PROP), c(LimiteSuperior_AMLO_SI,LimiteSuperior_AMLO_PROP), c(AmplitudIntervalo_AMLO_SI,AmplitudIntervalo_AMLO_PROP), c(CVE_AMLO_SI,CVE_AMLO_PROP),c(rep(1,5),deffEstTheta_50_AMLO,deffEstTheta_100_AMLO,deffEstTheta_250_AMLO,deffEstTheta_500_AMLO,deffEstTheta_6500_AMLO))
+
+colnames(metricas_AMLO) <- c("Metodo", "n","TotalVerdadero","TotalEst","Diferencia","ErrorEstandar", "LimiteInf", "LimiteSup","Amplitud", "CVE", "DEFF")
+
+metricas_JVM <- data_frame(metodo,c(muestra,muestra), c(Total_JVM,Total_JVM),c(Estimacion_JVM_SI, Estimacion_JVM_PROP), c(Total_JVM-Estimacion_JVM_SI, Total_JVM-Estimacion_JVM_PROP), c( ErrorEstandar_JVM_SI,ErrorEstandar_JVM_PROP), c(LimiteInferior_JVM_SI,LimiteInferior_JVM_PROP), c(LimiteSuperior_JVM_SI,LimiteSuperior_JVM_PROP), c(AmplitudIntervalo_JVM_SI,AmplitudIntervalo_JVM_PROP), c(CVE_JVM_SI,CVE_JVM_PROP),c(rep(1,5),deffEstTheta_50_JVM,deffEstTheta_100_JVM,deffEstTheta_250_JVM,deffEstTheta_500_JVM,deffEstTheta_6500_JVM))
+
+colnames(metricas_JVM) <- c("Metodo", "n","TotalVerdadero","TotalEst","Diferencia","ErrorEstandar", "LimiteInf", "LimiteSup","Amplitud", "CVE", "DEFF")
+
+metricas_GQT <- data_frame(metodo,c(muestra,muestra), c(Total_GQT,Total_GQT),c(Estimacion_GQT_SI, Estimacion_GQT_PROP),c(Total_GQT-Estimacion_GQT_SI, Total_GQT-Estimacion_GQT_PROP), c( ErrorEstandar_GQT_SI,ErrorEstandar_GQT_PROP), c(LimiteInferior_GQT_SI,LimiteInferior_GQT_PROP), c(LimiteSuperior_GQT_SI,LimiteSuperior_GQT_PROP), c(AmplitudIntervalo_GQT_SI,AmplitudIntervalo_GQT_PROP), c(CVE_GQT_SI,CVE_GQT_PROP),c(rep(1,5),deffEstTheta_50_GQT,deffEstTheta_100_GQT,deffEstTheta_250_GQT,deffEstTheta_500_GQT,deffEstTheta_6500_GQT))
+
+colnames(metricas_GQT) <- c("Metodo", "n","TotalVerdadero","TotalEst","Diferencia","ErrorEstandar", "LimiteInf", "LimiteSup","Amplitud", "CVE", "DEFF")
+
+metricas_NoReg <- data_frame(metodo,c(muestra,muestra), c(Total_NoReg,Total_NoReg),c(Estimacion_NoReg_SI, Estimacion_NoReg_PROP),c(Total_NoReg-Estimacion_NoReg_SI, Total_NoReg-Estimacion_NoReg_PROP), c( ErrorEstandar_NoReg_SI,ErrorEstandar_NoReg_PROP), c(LimiteInferior_NoReg_SI,LimiteInferior_NoReg_PROP), c(LimiteSuperior_NoReg_SI,LimiteSuperior_NoReg_PROP), c(AmplitudIntervalo_NoReg_SI,AmplitudIntervalo_NoReg_PROP), c(CVE_NoReg_SI,CVE_NoReg_PROP),c(rep(1,5),deffEstTheta_50_NoReg,deffEstTheta_100_NoReg,deffEstTheta_250_NoReg,deffEstTheta_500_NoReg,deffEstTheta_6500_NoReg))
+
+colnames(metricas_NoReg) <- c("Metodo", "n","TotalVerdadero","TotalEst","Diferencia","ErrorEstandar", "LimiteInf", "LimiteSup","Amplitud", "CVE", "DEFF")
+
+metricas_Nulos <- data_frame(metodo,c(muestra,muestra), c(Total_Nulos,Total_Nulos),c(Estimacion_Nulos_SI, Estimacion_Nulos_PROP),c(Total_Nulos-Estimacion_Nulos_SI, Total_Nulos-Estimacion_Nulos_PROP), c( ErrorEstandar_Nulos_SI,ErrorEstandar_Nulos_PROP), c(LimiteInferior_Nulos_SI,LimiteInferior_Nulos_PROP), c(LimiteSuperior_Nulos_SI,LimiteSuperior_Nulos_PROP), c(AmplitudIntervalo_Nulos_SI,AmplitudIntervalo_Nulos_PROP), c(CVE_Nulos_SI,CVE_Nulos_PROP),c(rep(1,5),deffEstTheta_50_Nulos,deffEstTheta_100_Nulos,deffEstTheta_250_Nulos,deffEstTheta_500_Nulos,deffEstTheta_6500_Nulos))
+
+colnames(metricas_Nulos) <- c("Metodo", "n","TotalVerdadero","TotalEst", "Diferencia","ErrorEstandar", "LimiteInf", "LimiteSup","Amplitud", "CVE", "DEFF")
+
+
+# Se crea la tabla de las métricas
+tabla_metricas<-rbind(metricas_AMLO,metricas_EPN,metricas_JVM, metricas_GQT,metricas_Nulos,metricas_NoReg)
+# tabla_metricas$Candidato<-rep(c("AMLO","EPN","JVM","GQT","Nulos","No Reg."),each=10)
+# tabla_metricas<-tabla_metricas%>%select(Candidato,everything())
+
+tabla_metricas$TotalVerdadero<-prettyNum(as.numeric(tabla_metricas$TotalVerdadero),big.mark = ",",digits=2,scientific=FALSE)
+tabla_metricas$TotalEst<-prettyNum(as.numeric(tabla_metricas$TotalEst),big.mark = ",",digits=2,scientific=FALSE)
+tabla_metricas$Diferencia<-prettyNum(as.numeric(tabla_metricas$Diferencia),big.mark = ",",digits=2,scientific=FALSE)
+tabla_metricas$ErrorEstandar<-prettyNum(as.numeric(tabla_metricas$ErrorEstandar),big.mark = ",",digits=2,scientific=FALSE)
+tabla_metricas$LimiteInf<-prettyNum(as.numeric(tabla_metricas$LimiteInf),big.mark = ",",digits=2,scientific=FALSE)
+tabla_metricas$LimiteSup<-prettyNum(as.numeric(tabla_metricas$LimiteSup),big.mark = ",",digits=2,scientific=FALSE)
+tabla_metricas$Amplitud<-prettyNum(as.numeric(tabla_metricas$Amplitud),big.mark = ",",digits=2,scientific=FALSE)
+
+#-- Editamos la tabla --
+
+# #Se eliminan los repetidos en la primer columna para hacer un multirow
+# tabla_metricas$Candidato<-as.character(tabla_metricas$Candidato)
+# 
+# tamanioFilas<-rle(tabla_metricas$Candidato)
+# 
+# primero<-!duplicated(tabla_metricas$Candidato)
+# 
+# # tabla_metricas$Variable[!primero]<-paste("\\cline{2-",ncol(tabla_metricas),"}",sep="")
+# tabla_metricas$Candidato[!primero]<-""
+# tabla_metricas$Candidato[primero]<-paste0("\\hline\\parbox[t]{3mm}{\\multirow{", tamanioFilas$lengths, "}{*}{\\rotatebox[origin=c]{90}{\\textbf{", tamanioFilas$values, "}}}}")
+
+#Se eliminan los repetidos en la segunda columna para hacer un multirow
+tabla_metricas$Metodo<-as.character(tabla_metricas$Metodo)
+
+tamanioFilas<-rle(tabla_metricas$Metodo[1:10])
+
+primero<-!duplicated(tabla_metricas$Metodo[1:10])
+
+tabla_metricas$Metodo[!primero]<-""
+tabla_metricas$Metodo[primero]<-paste0("\\parbox[t]{1mm}{\\multirow{", tamanioFilas$lengths, "}{*}{\\rotatebox[origin=c]{90}{\\textbf{", tamanioFilas$values, "}}}}")
+
+filas<-c(6,16,26,36,46,56)
+
+# tabla_metricas$Candidato[filas]<-paste(tabla_metricas$Candidato[filas],"\\cline{2-10}",sep="")
+
+
+# Se da formato xtable. 
+tabla_metricas<-xtable(tabla_metricas,caption=paste("Métricas para el total de votos estimado por candidato, por tamaños de muestra y por método de estimación."),label="Tabla:metricasCandidatos")
+
+# Se alinean las columnas 
+align(tabla_metricas)<-"lc|c|rrr|rrrr|rr"
+
+addtorow<-list()
+addtorow$pos<-list(0,0,10,10,10,20,20,20,30,30,30,40,40,40,50,50,50)
+addtorow$command<-c(paste("\\multicolumn{",ncol(tabla_metricas),"}{c}{\\textbf{a) AMLO}}\\\\\n",sep=""),
+                    paste(" \\hline\\multicolumn{1}{c|}{Método} & \\multicolumn{1}{c|}{n} & \\multicolumn{1}{c}{Total} & \\multicolumn{1}{c}{Tot. Estim.} & \\multicolumn{1}{c|}{Diferencia} & \\multicolumn{1}{c}{Error Est.} & \\multicolumn{1}{c}{Límite Inf.} & \\multicolumn{1}{c}{Límite Sup.} & \\multicolumn{1}{c|}{Amplitud} & \\multicolumn{1}{c}{CVE} & \\multicolumn{1}{c}{DEFF}\\\\\n",sep=""),
+                    paste("\\hline \\multicolumn{",ncol(tabla_metricas),"}{c}{}\\\\\n",sep=""),
+                    paste("\\multicolumn{",ncol(tabla_metricas),"}{c}{\\textbf{b) EPN}}\\\\\n",sep=""),
+                    paste(" \\hline\\multicolumn{1}{c|}{Método} & \\multicolumn{1}{c|}{n} & \\multicolumn{1}{c}{Total} & \\multicolumn{1}{c}{Tot. Estim.} & \\multicolumn{1}{c|}{Diferencia} & \\multicolumn{1}{c}{Error Est.} & \\multicolumn{1}{c}{Límite Inf.} & \\multicolumn{1}{c}{Límite Sup.} & \\multicolumn{1}{c|}{Amplitud} & \\multicolumn{1}{c}{CVE} & \\multicolumn{1}{c}{DEFF}\\\\\n",sep=""),
+                    paste("\\hline \\multicolumn{",ncol(tabla_metricas),"}{c}{}\\\\\n",sep=""),
+                    paste("\\multicolumn{",ncol(tabla_metricas),"}{c}{\\textbf{c) JVM}}\\\\\n",sep=""),
+                    paste(" \\hline\\multicolumn{1}{c|}{Método} & \\multicolumn{1}{c|}{n} & \\multicolumn{1}{c}{Total} & \\multicolumn{1}{c}{Tot. Estim.} & \\multicolumn{1}{c|}{Diferencia} & \\multicolumn{1}{c}{Error Est.} & \\multicolumn{1}{c}{Límite Inf.} & \\multicolumn{1}{c}{Límite Sup.} & \\multicolumn{1}{c|}{Amplitud} & \\multicolumn{1}{c}{CVE} & \\multicolumn{1}{c}{DEFF}\\\\\n",sep=""),
+                    paste("\\hline \\multicolumn{",ncol(tabla_metricas),"}{c}{}\\\\\n",sep=""),
+                    paste("\\multicolumn{",ncol(tabla_metricas),"}{c}{\\textbf{d) GQT}}\\\\\n",sep=""),
+                    paste(" \\hline\\multicolumn{1}{c|}{Método} & \\multicolumn{1}{c|}{n} & \\multicolumn{1}{c}{Total} & \\multicolumn{1}{c}{Tot. Estim.} & \\multicolumn{1}{c|}{Diferencia} & \\multicolumn{1}{c}{Error Est.} & \\multicolumn{1}{c}{Límite Inf.} & \\multicolumn{1}{c}{Límite Sup.} & \\multicolumn{1}{c|}{Amplitud} & \\multicolumn{1}{c}{CVE} & \\multicolumn{1}{c}{DEFF}\\\\\n",sep=""),
+                    paste("\\hline \\multicolumn{",ncol(tabla_metricas),"}{c}{}\\\\\n",sep=""),
+                    paste("\\multicolumn{",ncol(tabla_metricas),"}{c}{\\textbf{e) Nulos}}\\\\\n",sep=""),
+                    paste(" \\hline\\multicolumn{1}{c|}{Método} & \\multicolumn{1}{c|}{n} & \\multicolumn{1}{c}{Total} & \\multicolumn{1}{c}{Tot. Estim.} & \\multicolumn{1}{c|}{Diferencia} & \\multicolumn{1}{c}{Error Est.} & \\multicolumn{1}{c}{Límite Inf.} & \\multicolumn{1}{c}{Límite Sup.} & \\multicolumn{1}{c|}{Amplitud} & \\multicolumn{1}{c}{CVE} & \\multicolumn{1}{c}{DEFF}\\\\\n",sep=""),
+                    paste("\\hline \\multicolumn{",ncol(tabla_metricas),"}{c}{}\\\\\n",sep=""),
+                    paste("\\multicolumn{",ncol(tabla_metricas),"}{c}{\\textbf{f) No Registrados}}\\\\\n",sep=""),
+                   paste(" \\hline\\multicolumn{1}{c|}{Método} & \\multicolumn{1}{c|}{n} & \\multicolumn{1}{c}{Total} & \\multicolumn{1}{c}{Tot. Estim.} & \\multicolumn{1}{c|}{Diferencia} & \\multicolumn{1}{c}{Error Est.} & \\multicolumn{1}{c}{Límite Inf.} & \\multicolumn{1}{c}{Límite Sup.} & \\multicolumn{1}{c|}{Amplitud} & \\multicolumn{1}{c}{CVE} & \\multicolumn{1}{c}{DEFF}\\\\\n",sep=""))
+
+
+# Se imprime la tabla 
+print(tabla_metricas,print.placement='H',NA.string="",latex.environments="center",add.to.row=addtorow, caption.placement="top",include.rownames=FALSE,include.colnames=FALSE,hline.after=c(0,seq(5,60,5)),size="footnotesize",scalebox=0.85,sanitize.text.function = function(x) x)
+  
+
+@
+
+\clearpage
+Por su parte, en las columnas 10 y 11 de dicha tabla se encontró que al utilizar un diseño de muestreo con PP se obtiene un CVE menor (o en su defecto igual) al obtenido bajo SI. Cabe destacar que las únicas excepciones en las que el CVE bajo SI fue menor que bajo propabilidades proporcionales, corresponden a los casos de Nulos (con $n=250$) y a No Registrados (con $n=50, 250, 500$); posiblemente esto tenga que ver con que el tamaño del listado nominal no tiene una relación tan estrecha con el total de votos anulados ni con el total de votos por candidatos no registrados. Además, para ambos métodos el menor CVE se obtiene con el mayor tamaño de muestra; ésto no puede generalizare para el valor del DEFF en el muestreo con probabilidades proporcionales. Estos resultados se deben principalmente a que, con probabilidades proporcionales, sí se toma en consideración la cantidad de electores que podrían votar en cada una de las secciones nominales al asignarles diferentes factores de expansión; mientras que en el muestreo SI se considera el mismo factor de expansión para todas las secciones nominales en la muestra.
+
+
+\section{Resultados Electorales}
+
+Es difícil confiar por completo en todas las estimaciones para las muestras de menor tamaño. Por ejemplo, para el caso de AMLO con PP y tamaño de muestra 50, el total estimado es de aproximadamente 15 millones, mientras que la amplitud del intervalo de confianza es de una tercera parte de dicha estimación. Un segundo ejemplo se tiene para la estimación del total de votos para candidatos no registrados bajo SI con una muestra de tamaño 100, donde la amplitud del intervalo de confianza es mayor al total estimado. Sin embargo, a partir del tamaño de muestra 250 la proporcion entre la estimación del total y la amplitud del intervalo de confianza disminuye considerablemente conforme aumenta el tamaño de muestra; esto da señales de que es posible confiar más en las estimaciones para las muestras grandes.\\
+
+De esta manera, utilizando el menor CVE como criterio de selección, para dar una estimación de los resultados electorales se utilizarían las estimaciones del tamaño de muestra 6500 con probabilidades proporcionales para todos los candidatos. Los totales estimados se pueden consultar en la tabla \ref{Tabla:metricasCandidatos} de la sección anterior. Este criterio, es inconsistente únicamente para las estimaciones de JVM y para el total de votos nulos ya que bajo PP, pero con tamaño de muestra 500, se obtienen estimaciones más cercanas al verdadero valor. Sin embargo, en la vida real no es factible tener distintas muestras para poder hacer la comparación ni el verdadero valor de la variable de interés para verificar la calidad de las estimaciones.\\
+
+La tabla \ref{Tabla:rankingCandidatos} muestra el ranking de los candidatos bajo las estimaciones de las distintas muestras. Se puede notar que independientemente del método y del tamaño de muestra, el primer lugar es para EPN, el segundo lugar para AMLO y el tecer lugar para JVM. Junto con la información de la tabla \ref{Tabla:metricasCandidatos}, se puede concluir que Gabriel Quadri es el candidato más sensible a cambios en el tamaño de muestra puesto que alterna entre el cuarto y quinto lugar del ranking con los votos nulos (aunque en su mayoría GQT queda en quinto lugar).\\
+
+<<Ranking_por_Metodo,echo=FALSE, cache=TRUE, results='asis'>>=
+
+candidatos<-c("AMLO","EPN","JVM","GQT","Nulos","No Reg.")
+
+rank_SI_50=rank(-c(EstTheta_50_AMLO,EstTheta_50_EPN,EstTheta_50_JVM,EstTheta_50_GQT,EstTheta_50_Nulos,EstTheta_50_NoReg))
+rank_SI_100=rank(-c(EstTheta_100_AMLO,EstTheta_100_EPN,EstTheta_100_JVM,EstTheta_100_GQT,EstTheta_100_Nulos,EstTheta_100_NoReg))
+rank_SI_250=rank(-c(EstTheta_250_AMLO,EstTheta_250_EPN,EstTheta_250_JVM,EstTheta_250_GQT,EstTheta_250_Nulos,EstTheta_250_NoReg))
+rank_SI_500=rank(-c(EstTheta_500_AMLO,EstTheta_500_EPN,EstTheta_500_JVM,EstTheta_500_GQT,EstTheta_500_Nulos,EstTheta_500_NoReg))
+rank_SI_6500=rank(-c(EstTheta_6500_AMLO,EstTheta_6500_EPN,EstTheta_6500_JVM,EstTheta_6500_GQT,EstTheta_6500_Nulos,EstTheta_6500_NoReg))
+
+rank_PROP_50=rank(-c(EstTheta_50_AMLO_PROP,EstTheta_50_EPN_PROP,EstTheta_50_JVM_PROP,EstTheta_50_GQT_PROP,EstTheta_50_Nulos_PROP,EstTheta_50_NoReg_PROP))
+rank_PROP_100=rank(-c(EstTheta_100_AMLO_PROP,EstTheta_100_EPN_PROP,EstTheta_100_JVM_PROP,EstTheta_100_GQT_PROP,EstTheta_100_Nulos_PROP,EstTheta_100_NoReg_PROP))
+rank_PROP_250=rank(-c(EstTheta_250_AMLO_PROP,EstTheta_250_EPN_PROP,EstTheta_250_JVM_PROP,EstTheta_250_GQT_PROP,EstTheta_250_Nulos_PROP,EstTheta_250_NoReg_PROP))
+rank_PROP_500=rank(-c(EstTheta_500_AMLO_PROP,EstTheta_500_EPN_PROP,EstTheta_500_JVM_PROP,EstTheta_500_GQT_PROP,EstTheta_500_Nulos_PROP,EstTheta_500_NoReg_PROP))
+rank_PROP_6500=rank(-c(EstTheta_6500_AMLO_PROP,EstTheta_6500_EPN_PROP,EstTheta_6500_JVM_PROP,EstTheta_6500_GQT_PROP,EstTheta_6500_Nulos_PROP,EstTheta_6500_NoReg_PROP))
+
+SI_50<-cbind(rank_SI_50,candidatos)
+SI_100<-cbind(rank_SI_100,candidatos)
+SI_250<-cbind(rank_SI_250,candidatos)
+SI_500<-cbind(rank_SI_500,candidatos)
+SI_6500<-cbind(rank_SI_6500,candidatos)
+
+PROP_50<-cbind(rank_PROP_50,candidatos)
+PROP_100<-cbind(rank_PROP_100,candidatos)
+PROP_250<-cbind(rank_PROP_250,candidatos)
+PROP_500<-cbind(rank_PROP_500,candidatos)
+PROP_6500<-cbind(rank_PROP_6500,candidatos)
+
+
+ranking<-data.frame(lugar=1:6,
+                    SI_50=SI_50[order(SI_50[,1]),2],
+                    SI_100=SI_100[order(SI_100[,1]),2],
+                    SI_250=SI_250[order(SI_250[,1]),2],
+                    SI_500=SI_500[order(SI_500[,1]),2],
+                    SI_6500=SI_6500[order(SI_6500[,1]),2],
+                    PROP_50=PROP_50[order(PROP_50[,1]),2],
+                    PROP_100=PROP_100[order(PROP_100[,1]),2],
+                    PROP_250=PROP_250[order(PROP_250[,1]),2],
+                    PROP_500=PROP_500[order(PROP_500[,1]),2],
+                    PROP_6500=PROP_6500[order(PROP_6500[,1]),2])
+
+
+# Se da formato xtable. 
+ranking<-xtable(ranking,caption=paste("Ranking de candidatos por tamaños de muestra y por método de estimación."),label="Tabla:rankingCandidatos")
+
+# Se alinean las columnas 
+align(ranking)<-"lc|lllll|lllll"
+
+addtorow<-list()
+addtorow$pos<-list(0,0)
+addtorow$command<-c(paste("\\multirow{2}{*}{Lugar} & \\multicolumn{5}{c|}{Aleatorio Simple}  & \\multicolumn{5}{c}{Prob. Proporcionales}\\\\\n",sep=""),
+                    paste("\\cline{2-11} & \\multicolumn{1}{c}{n=50} & \\multicolumn{1}{c}{n=100} & \\multicolumn{1}{c}{n=250} & \\multicolumn{1}{c}{n=500} & \\multicolumn{1}{c}{n=6500} & \\multicolumn{1}{|c}{n=50} & \\multicolumn{1}{c}{n=100} & \\multicolumn{1}{c}{n=250} & \\multicolumn{1}{c}{n=500} & \\multicolumn{1}{c}{n=6500}\\\\\n",sep=""))
+
+
+# Se imprime la tabla 
+print(ranking,print.placement='H',NA.string="",latex.environments="center",add.to.row=addtorow, caption.placement="top",include.rownames=FALSE,include.colnames=FALSE,hline.after=c(-1,0,nrow(ranking)),size="small",scalebox=0.95,sanitize.text.function = function(x) x)
+@
+\bigskip
+
+Se puede concluir que, en general, todos los diseños de muestreo especificados en este ejercicio funcionaron para el fin último de estimar al ganador de las elecciones presidenciales de México en 2012. Sin embargo, es importante destacar que el muestreo con probabilidades proporcionales resultó mucho mejor que el muestreo SI en términos de precisión y exactitud, sobre todo para tamaños de muestra pequeños; ésto se traduce en estimadores más estables y cercanos al verdadero valor. 
+
+\end{document}
